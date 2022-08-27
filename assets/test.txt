@@ -1,0 +1,5 @@
+spritesheettest.qoi
+red 0 0 256 256
+magenta 256 0 256 256
+green 256 256 256 256
+cyan 0 256 256 256
