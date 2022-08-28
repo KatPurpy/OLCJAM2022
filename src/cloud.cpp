@@ -24,7 +24,7 @@ b2Body* Cloud::CreateBody(b2World* world) {
     b2Body* body = world->CreateBody(&def);
     b2CircleShape shape;
     
-    shape.m_radius = 9;
+    shape.m_radius = 4.5f;
     body->CreateFixture(&shape, 1);
     return body;    
 }

@@ -12,6 +12,7 @@
 #include "BZZRE/subsystems/input.hpp"
 #include "sun.hpp"
 #include "cloud.hpp"
+#include "terrain.hpp"
 
 using namespace BZZRE;
 
@@ -35,6 +36,7 @@ b2World* world;
 
 Sun sun;
 Cloud cloud;
+Terrain terrain;
 
 void init()
 {
@@ -64,16 +66,6 @@ void init()
     world->SetDebugDraw(draw);
     draw->SetFlags(b2Draw::e_shapeBit);
 
-	b2BodyDef groundBodyDef;
-	groundBodyDef.position.Set(0.0f, -20.0f);
-    groundBodyDef.angle = 3.14f * -0.25f;
-	b2Body* groundBody = world->CreateBody(&groundBodyDef);
-	b2PolygonShape groundBox;
-	groundBox.SetAsBox(50.0f, 10.0f);
-	groundBody->CreateFixture(&groundBox, 0.0f);
-
-    
-    
     Camera::x = -150;
     Camera::y = -150;
     Camera::screen_margin_x = 0.35f;
@@ -83,6 +75,9 @@ void init()
 
     sun.Instantiate(world);
     cloud.Instantiate(world);
+    terrain.Initialize(world, 45, 0, 128, 128, 32);
+    terrain.Generate(world, [](int,float x){return (float)(((int)(x/32)) * 1);});
+
 }
 
 void update()
@@ -96,7 +91,17 @@ void update()
 	simgui_new_frame(&d);
     sun.Update();
     cloud.Update();
-      
+      if(Input::MouseClick(SAPP_MOUSEBUTTON_MIDDLE))
+      {
+            float aaa[20] = {5};
+        for(int i = 0; i < 20; i++) aaa[i] = -5;
+
+        float mx, my;
+        Input::MousePos(&mx, &my);
+
+        terrain.WriteHeightMapOffset(aaa, 20, Camera::ScreenToBox2D({mx,0}).x);
+        terrain.RegenerateChunks();
+      }
     world->Step(1.f/60.0f, 6, 2);
    // ImGui::Text("it finally works");
 }
@@ -107,20 +112,6 @@ void draw()
     sg_begin_default_pass(&act, sapp_width(), sapp_height());
     params.mvp = HMM_Orthographic(0.f, sapp_widthf(), sapp_heightf(), 0, 0.01f, 100.f);
 
-    Graphics::SpriteDrawParams sdp{};
-    sdp.xywh = {0,0,256,256};
-    sdp.color = {255,255,255,255};
-    sdp.pipeline = spritePipeline;
-    sdp.uniforms = &uparams;
-    ImGui::InputText("Sprite", IMGNAME, 255);
-    static int spriteid;
-    ImGui::InputInt("sprite_id", &spriteid, 1, 1);
-    sheet->GetSprite(spriteid, sdp);
-
-    drawList->Add(sdp);
-
-    drawList->Draw({});
-    drawList->Clear();
     float mx, my;
     Input::MousePos(&mx, &my);
     Camera::MouseMovement(mx/sapp_widthf(),my/sapp_heightf());

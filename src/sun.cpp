@@ -24,7 +24,7 @@ b2Body* Sun::CreateBody(b2World* world)
     
     b2Body* body = world->CreateBody(&def);
     b2CircleShape shape;
-    shape.m_radius = 6;
+    shape.m_radius = 3;
     body->CreateFixture(&shape, 1);
     return body;
 }
