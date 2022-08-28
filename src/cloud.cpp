@@ -1,6 +1,7 @@
 #pragma once
 #include "unit.hpp"
 #include "cloud.hpp"
+#include "stdio.h"
 
 Cloud::Cloud()
 {
@@ -13,6 +14,11 @@ void Cloud::Update() {
 
 void Cloud::Draw() {
     
+}
+
+void Cloud::Ability()
+{
+    printf("Rain :D\n");
 }
 
 b2Body* Cloud::CreateBody(b2World* world) {
@@ -29,6 +35,7 @@ b2Body* Cloud::CreateBody(b2World* world) {
     return body;    
 }
 
-void Cloud::OnCollisionEnter(b2Body*) {
+void Cloud::OnCollisionEnter(b2Body*) 
+{
     
 }

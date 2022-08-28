@@ -1,5 +1,5 @@
 #include "sun.hpp"
-
+#include "stdio.h"
 Sun::Sun()
 {
     m_maxspeed = 20;
@@ -13,6 +13,11 @@ void Sun::Update()
 void Sun::Draw()
 {
 
+}
+
+void Sun::Ability()
+{
+    printf("BZZZZZ\n");
 }
 
 b2Body* Sun::CreateBody(b2World* world)

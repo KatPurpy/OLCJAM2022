@@ -20,8 +20,7 @@ void Unit::BaseUnitUpdate()
         if(BZZRE::Input::MouseUp(SAPP_MOUSEBUTTON_LEFT)) 
         {
             lock = false;
-        }
-        return;
+        }else return;
     }
     if(BZZRE::Input::MouseClick(SAPP_MOUSEBUTTON_LEFT))
     {
@@ -29,14 +28,23 @@ void Unit::BaseUnitUpdate()
         BZZRE::Input::MousePos(&pos.X, &pos.Y);
         auto worldpos = Camera::ScreenToBox2D(pos);
         auto fixture = body->GetFixtureList()[0]; //a unit always has only 1 fixture
-        if(fixture.TestPoint(worldpos))
+        auto testpoint = fixture.TestPoint(worldpos);
+        if(Unit::current != this && testpoint)
         {
             Unit::current = this;
-             lock = true;
+            lock = true;
+            return;
         }
-       
-        return;
-    }
+
+        if(Unit::current == this && testpoint)
+        {
+            Ability();
+            lock = true;
+            return;
+        }
+    } else 
+
+    
 
     if(Unit::current == this && BZZRE::Input::MouseDown(SAPP_MOUSEBUTTON_LEFT))
     {

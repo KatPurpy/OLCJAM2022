@@ -3,6 +3,8 @@
 
 class Sun : public Unit
 {
+    protected:
+        void Ability();
     public:
         Sun();
         b2BodyDef BodyDef();

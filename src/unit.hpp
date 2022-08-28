@@ -11,6 +11,8 @@ class Unit : public PhysicsEntity
         float m_maxspeed;
         bool lock;
         void BaseUnitUpdate();
+        void IsClickOnMe();
+        virtual void Ability() = 0;
     public:
         void Follow();
         
