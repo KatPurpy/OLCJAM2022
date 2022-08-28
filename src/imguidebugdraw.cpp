@@ -1,6 +1,5 @@
 #include "imgui.h"
-#include "box2d/box2d.h"
-#include "box2d/b2_draw.h"
+#include "Box2D.h"
 #include "camera.hpp"
 
 class FooDraw : public b2Draw
@@ -10,9 +9,19 @@ class FooDraw : public b2Draw
         uint32_t packedR = uint32_t(color.r * 255);
         uint32_t packedG = uint32_t(color.g * 255) << 8; // shift bits over 8 places
         uint32_t packedB = uint32_t(color.b * 255) << 16; // shift bits over 16 places
-        uint32_t packedA = uint32_t(color.a * 255) << 24; // shift bits over 24 places
+        uint32_t packedA = uint32_t(255) << 24; // shift bits over 24 places
         return packedR + packedG + packedB + packedA;
     }
+
+    ImU32 b2Particle( const b2ParticleColor& color)
+    {
+        uint32_t packedR = uint32_t(color.r * 255);
+        uint32_t packedG = uint32_t(color.g * 255) << 8; // shift bits over 8 places
+        uint32_t packedB = uint32_t(color.b * 255) << 16; // shift bits over 16 places
+        uint32_t packedA = uint32_t(color.a) << 24; // shift bits over 24 places
+        return packedR + packedG + packedB + packedA;
+    }
+
     ImVec2 b2WorldToScreen(b2Vec2 vec)
     {
         hmm_v2 world = Camera::Box2DToScreen(vec);
@@ -64,5 +73,15 @@ class FooDraw : public b2Draw
         auto drawlist = ImGui::GetBackgroundDrawList();
         ImVec2 c = b2WorldToScreen(p);
         drawlist->AddCircleFilled(c, size * Camera::ppm, b2CtoImU32(color));
+    }
+
+    void DrawParticles(const b2Vec2 *centers, float32 radius, const b2ParticleColor *colors, int32 count)
+    {
+        auto drawList = ImGui::GetBackgroundDrawList();
+        for(int i = 0; i < count; i++)
+        {
+            auto vec = centers[i];
+            drawList->AddCircleFilled({vec.x, vec.y}, radius, b2Particle(colors[i]), 5);
+        }
     }
   };

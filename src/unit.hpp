@@ -9,6 +9,7 @@ class Unit : public PhysicsEntity
         static inline Unit* current;
         b2Vec2 targetpos;
         float m_maxspeed;
+        bool lock;
         void BaseUnitUpdate();
     public:
         void Follow();

@@ -15,7 +15,6 @@ void Unit::Follow()
 
 void Unit::BaseUnitUpdate()
 {
-    static bool lock = false;
     if(lock) 
     {
         if(BZZRE::Input::MouseUp(SAPP_MOUSEBUTTON_LEFT)) 

@@ -6,8 +6,7 @@
 #include "BZZRE/subsystems/graphics/pipelinebuilder.hpp"
 #include "BZZRE/libs.h"
 #include "shader_default2D.h"
-#include "box2D/box2d.h"
-#include "box2d/b2_world.h"
+#include "Box2D.h"
 #include "imguidebugdraw.cpp"
 #include "camera.hpp"
 #include "BZZRE/subsystems/input.hpp"
@@ -114,7 +113,9 @@ void draw()
     sdp.pipeline = spritePipeline;
     sdp.uniforms = &uparams;
     ImGui::InputText("Sprite", IMGNAME, 255);
-    sheet->GetSprite(IMGNAME, sdp);
+    static int spriteid;
+    ImGui::InputInt("sprite_id", &spriteid, 1, 1);
+    sheet->GetSprite(spriteid, sdp);
 
     drawList->Add(sdp);
 
@@ -126,7 +127,7 @@ void draw()
 
   
 
-    world->DebugDraw();
+    world->DrawDebugData();
 
     simgui_render();
     sg_end_pass();

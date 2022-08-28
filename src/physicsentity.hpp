@@ -1,6 +1,5 @@
 #pragma once
-#include "box2d/b2_body.h"
-#include "box2d/box2d.h"
+#include "Box2D.h"
 
 class PhysicsEntity
 {
