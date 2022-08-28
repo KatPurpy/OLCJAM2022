@@ -1,5 +1,11 @@
 #include "unit.hpp"
 #include "stdio.h"
+
+Unit::Unit()
+{
+    type = Constants::PC_PLAYERUNIT;    
+}
+
 void Unit::Follow()
 {
     auto thing = targetpos;

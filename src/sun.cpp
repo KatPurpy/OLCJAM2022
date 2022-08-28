@@ -30,7 +30,11 @@ b2Body* Sun::CreateBody(b2World* world)
     b2Body* body = world->CreateBody(&def);
     b2CircleShape shape;
     shape.m_radius = 3;
-    body->CreateFixture(&shape, 1);
+    b2FixtureDef fdef;
+    fdef.filter.categoryBits = Constants::PC_PLAYERUNIT;
+    fdef.filter.maskBits = Constants::PLAYERUNIT_COLLIDESWITH;
+    fdef.shape = &shape;
+    body->CreateFixture(&fdef);
     return body;
 }
 void Sun::OnCollisionEnter(b2Body*) {

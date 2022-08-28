@@ -1,9 +1,11 @@
 #pragma once
 #include "Box2D.h"
+#include "constants.hpp"
 
 class PhysicsEntity
 {
     public:
+        Constants::PhysicsCategory type;
         b2Body* body;
         void Instantiate(b2World*);
         virtual b2Body* CreateBody(b2World* world) = 0;

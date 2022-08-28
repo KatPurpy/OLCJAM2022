@@ -14,6 +14,7 @@ class Unit : public PhysicsEntity
         void IsClickOnMe();
         virtual void Ability() = 0;
     public:
+        Unit();
         void Follow();
         
 };

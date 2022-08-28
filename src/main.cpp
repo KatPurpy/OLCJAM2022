@@ -13,6 +13,7 @@
 #include "sun.hpp"
 #include "cloud.hpp"
 #include "terrain.hpp"
+#include "animal.hpp"
 
 using namespace BZZRE;
 
@@ -37,6 +38,7 @@ b2World* world;
 Sun sun;
 Cloud cloud;
 Terrain terrain;
+Animal animal;
 
 void init()
 {
@@ -77,7 +79,8 @@ void init()
     cloud.Instantiate(world);
     terrain.Initialize(world, 45, 0, 128, 128, 32);
     terrain.Generate(world, [](int,float x){return (float)(((int)(x/32)) * 1);});
-
+    animal.Instantiate(world);
+    animal.body->SetTransform({60, 10}, 0);
 }
 
 void update()
@@ -91,6 +94,7 @@ void update()
 	simgui_new_frame(&d);
     sun.Update();
     cloud.Update();
+    animal.Update();
       if(Input::MouseClick(SAPP_MOUSEBUTTON_MIDDLE))
       {
             float aaa[20] = {5};
@@ -116,7 +120,13 @@ void draw()
     Input::MousePos(&mx, &my);
     Camera::MouseMovement(mx/sapp_widthf(),my/sapp_heightf());
 
-  
+    /*printf("BEGIN BODY LIST\n");
+    for(auto b = world->GetBodyList(); b; b = b->GetNext())
+    {
+        printf("BODY TYPE %i %p\n",b->GetType(), b->GetUserData());
+
+    }
+        printf("END BODY LIST\n");*/
 
     world->DrawDebugData();
 

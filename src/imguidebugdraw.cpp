@@ -9,7 +9,7 @@ class FooDraw : public b2Draw
         uint32_t packedR = uint32_t(color.r * 255);
         uint32_t packedG = uint32_t(color.g * 255) << 8; // shift bits over 8 places
         uint32_t packedB = uint32_t(color.b * 255) << 16; // shift bits over 16 places
-        uint32_t packedA = uint32_t(255) << 24; // shift bits over 24 places
+        uint32_t packedA = uint32_t(128) << 24; // shift bits over 24 places
         return packedR + packedG + packedB + packedA;
     }
 

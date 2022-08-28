@@ -2,6 +2,7 @@
 #include "Box2D.h"
 #include "stb_ds.h"
 #include "HandmadeMath.h"
+#include "constants.hpp"
 class Terrain {
   struct WriteInfo
   {
@@ -81,6 +82,8 @@ class Terrain {
         arrfree(points);
         b2FixtureDef fixtureDef;
         fixtureDef.shape = &chainShape;
+        fixtureDef.filter.categoryBits = Constants::PC_GROUND;
+                fixtureDef.filter.maskBits = Constants::GROUND_COLLIDESWITH;
         body->CreateFixture(&fixtureDef);
         chunkBodies[chunk] = body;
         m_chunk_is_dirty[chunk] = false;
