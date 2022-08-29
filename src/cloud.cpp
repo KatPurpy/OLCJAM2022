@@ -3,6 +3,7 @@
 #include "cloud.hpp"
 #include "stdio.h"
 #include "animal.hpp"
+#include "overlapcheck.hpp"
 Cloud::Cloud()
 {
     m_maxspeed = 5;
@@ -16,31 +17,18 @@ void Cloud::Draw() {
     
 }
 
-class queryaabbcallback : public b2QueryCallback
-{
-    float x;
-    public:
-        queryaabbcallback(float x) : x(x)
-        {
-
-        }
-        bool ReportFixture(b2Fixture* fixture)
-        {
-
-            auto data = (Animal*)fixture->GetBody()->GetUserData();
-            printf("data %p\n", data);
-            if(data && data->type == Constants::PC_ANIMAL)
-            {
-                data->GetScared(x);
-            }
-        }
-};
-
 void Cloud::Ability()
 {
     printf("Rain :D\n");
     auto pos = body->GetPosition();
-    //HACK: MUST IMPLEMENT PROPER OVERLAP TESTS INSTEAD OF THIS MESS.
+
+    OverlapCheck<Animal*, Constants::PC_ANIMAL, false> queue;
+    Animal** animals = queue.OverlapCircle(body->GetWorld(), pos, 50);
+    for(int i = 0; i < arrlen(animals); i++)
+    {
+        animals[i]->GetScared(pos.x);
+    }
+    /*//HACK: MUST IMPLEMENT PROPER OVERLAP TESTS INSTEAD OF THIS MESS.
     b2Vec2 lowerBound, upperBound;
     lowerBound = pos;
     upperBound = pos;
@@ -51,7 +39,7 @@ void Cloud::Ability()
 
     b2AABB aabb = {lowerBound, upperBound};
     queryaabbcallback cb(pos.x);
-    body->GetWorld()->QueryAABB(&cb, aabb);
+    body->GetWorld()->QueryAABB(&cb, aabb);*/
 }
 
 b2Body* Cloud::CreateBody(b2World* world) {

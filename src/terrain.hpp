@@ -3,6 +3,8 @@
 #include "stb_ds.h"
 #include "HandmadeMath.h"
 #include "constants.hpp"
+#include "earcut.hpp"
+//#include "delaunator.hpp"
 class Terrain {
   struct WriteInfo
   {
@@ -14,11 +16,16 @@ class Terrain {
     {
       localoffset = begin_x - terrain->m_offset.X;
       begin = localoffset / terrain->m_distBetweenVecs;
-      if(begin < 0) begin = 0;
+      if(begin < 0) {
+       begin = 0;
+    }
       end = begin + count;
       printf("BEGIN %i\n",begin);
-      assert(begin < arrlen(terrain->m_heightmap));
-      assert(end <= arrlen(terrain->m_heightmap));
+      
+      if(end >= arrlen(terrain->m_heightmap))
+      {
+        end = arrlen(terrain->m_heightmap);
+      }
     }
   };
   friend struct WriteInfo;
@@ -28,15 +35,28 @@ class Terrain {
     float m_distBetweenVecs;
     b2Body** chunkBodies;
     hmm_v2 m_offset;
-
+    float m_max_depth;
   public:
    
     bool* m_chunk_is_dirty;
     float chunk_length;
     float m_num_chunks;
     int m_verts_per_chunk;
-  void Initialize(b2World* world, float start_x, float start_y, float length, int num_verts, int verts_per_chunk)
+  
+  float GetDistance(int vertex)
   {
+    return (float)vertex * m_distBetweenVecs;
+  }
+
+  int GetVertsForDistance(float distance)
+  {
+    return distance / m_distBetweenVecs;
+  }
+
+  void Initialize(b2World* world, float start_x, float start_y, float max_depth, float length, int num_verts, int verts_per_chunk)
+  {
+      assert(max_depth > 0);
+      m_max_depth = max_depth;
       m_offset = {start_x, start_y};
       assert(world);
       m_world = world;
@@ -45,6 +65,7 @@ class Terrain {
       
       m_distBetweenVecs = length / num_verts;
       m_verts_per_chunk = verts_per_chunk;
+      assert(m_verts_per_chunk % 8 == 0);
       this->chunk_length = m_distBetweenVecs * verts_per_chunk;
       arrsetlen(m_chunk_is_dirty, m_num_chunks);
       arrsetlen(m_heightmap, num_verts);
@@ -60,6 +81,8 @@ class Terrain {
         b2Vec2* points = NULL;
         int chunnkverts_begin = chunk * m_verts_per_chunk;
         int chunkverts_end = (chunnkverts_begin + m_verts_per_chunk);
+        float chunkworldpos_x = chunnkverts_begin * m_distBetweenVecs;
+        float chunkworldposend_x = chunkverts_end * m_distBetweenVecs;
         if(chunk != (m_num_chunks - 1)) //last chunk must not connect to first point of the next one as it simply does not exist
         {
           chunkverts_end++;
@@ -67,26 +90,50 @@ class Terrain {
         for(int i = chunnkverts_begin; i < chunkverts_end; i++)
         {
             b2Vec2 point;
-            point.x = i * m_distBetweenVecs;
+            point.x = (i - chunnkverts_begin) * m_distBetweenVecs ;
             point.y = m_heightmap[i];
             arrpush(points, point);
         }
         if(chunkBodies[chunk]) m_world->DestroyBody(chunkBodies[chunk]);
         b2BodyDef bodydef;
         bodydef.type = b2_staticBody;
-        bodydef.position.Set(m_offset.X, m_offset.Y);
+        bodydef.position.Set(m_offset.X + chunkworldpos_x, m_offset.Y);
         b2Body* body = m_world->CreateBody(&bodydef);
         
-        b2ChainShape chainShape;
-        chainShape.CreateChain(points, arrlen(points));
-        arrfree(points);
-        b2FixtureDef fixtureDef;
-        fixtureDef.shape = &chainShape;
-        fixtureDef.filter.categoryBits = Constants::PC_GROUND;
-                fixtureDef.filter.maskBits = Constants::GROUND_COLLIDESWITH;
-        body->CreateFixture(&fixtureDef);
+        for(int i = 0; i < m_verts_per_chunk - 1; i+=4)
+        {
+          int lastPointIdx = i + 4;
+          if(chunk == (m_num_chunks - 1) && (i == (m_verts_per_chunk - 4)))
+          {
+            lastPointIdx--;
+          }
+          //BUG: when using wireframe rendering in debug, the bottom lines of the polys are not renderered, if something breaks, blame this
+            b2Vec2 quad[7] = 
+            {
+              points[i],
+              points[i+1],
+              points[i+2],
+              points[i+3],
+              points[lastPointIdx],
+              {(lastPointIdx) * m_distBetweenVecs , -m_max_depth - 5},
+              {i * m_distBetweenVecs , -m_max_depth - 5},
+            };
+
+            b2PolygonShape shape;
+            shape.Set(quad, 7);
+
+            b2FixtureDef fixtureDef;
+            fixtureDef.shape = &shape;
+            fixtureDef.filter.categoryBits = Constants::PC_GROUND;
+            fixtureDef.filter.maskBits = Constants::GROUND_COLLIDESWITH;
+            body->CreateFixture(&fixtureDef);
+        }
+
         chunkBodies[chunk] = body;
         m_chunk_is_dirty[chunk] = false;
+
+                //arrfree(doubles_ptr);
+        arrfree(points);
     }
   }
 
@@ -112,6 +159,16 @@ class Terrain {
     WriteHeightmapProcedural([](int,float){return *(tmp_data++); }, count, begin_x);
   }
 
+  void WriteHeightmapProceduralOffset(float (*heightFunc)(int,float), int count, float begin_x)
+  {
+    //HACK: this ain't threadsafe!
+    static float* tmp_heightmap;
+    static float (*tmp_heightFunc)(int,float);
+    tmp_heightmap = m_heightmap;
+    tmp_heightFunc = heightFunc;
+    WriteHeightmapProcedural([](int vertex_index,float x){return tmp_heightmap[vertex_index] + tmp_heightFunc(vertex_index, x); }, count, begin_x);
+  }
+
   void WriteHeightMapOffset(float* data, int count, float begin_x)
   {
     //HACK: this ain't threadsafe!
@@ -119,8 +176,9 @@ class Terrain {
     static float* tmp_heightmap;
     tmp_heightmap = m_heightmap;
     tmp_data = data;
-    WriteHeightmapProcedural([](int vertex_index,float){return tmp_heightmap[vertex_index] + *(tmp_data++); }, count, begin_x);
+    WriteHeightmapProceduralOffset([](int vertex_index,float){return *(tmp_data++); }, count, begin_x);
   }
+
 
 
 

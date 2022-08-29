@@ -13,12 +13,12 @@ class FooDraw : public b2Draw
         return packedR + packedG + packedB + packedA;
     }
 
-    ImU32 b2Particle( const b2ParticleColor& color)
+    ImU32 b2pCtoIMU32(b2ParticleColor color)
     {
         uint32_t packedR = uint32_t(color.r * 255);
         uint32_t packedG = uint32_t(color.g * 255) << 8; // shift bits over 8 places
         uint32_t packedB = uint32_t(color.b * 255) << 16; // shift bits over 16 places
-        uint32_t packedA = uint32_t(color.a) << 24; // shift bits over 24 places
+        uint32_t packedA = uint32_t(color.a * 255) << 24; // shift bits over 24 places
         return packedR + packedG + packedB + packedA;
     }
 
@@ -40,6 +40,8 @@ class FooDraw : public b2Draw
     }
     void DrawSolidPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color) 
     {
+        DrawPolygon(vertices, vertexCount, color);
+        return;
         auto drawlist = ImGui::GetBackgroundDrawList();
         ImVec2 vectors[vertexCount];
         for(int i = 0; i < vertexCount; i++)
@@ -66,7 +68,10 @@ class FooDraw : public b2Draw
 
         drawlist->AddLine(b2WorldToScreen(p1),b2WorldToScreen(p2), b2CtoImU32(color));
     }
-    void DrawTransform(const b2Transform& xf) {}
+    void DrawTransform(const b2Transform& xf) 
+    {
+
+    }
 
 	void DrawPoint(const b2Vec2& p, float size, const b2Color& color)
     {
@@ -78,10 +83,19 @@ class FooDraw : public b2Draw
     void DrawParticles(const b2Vec2 *centers, float32 radius, const b2ParticleColor *colors, int32 count)
     {
         auto drawList = ImGui::GetBackgroundDrawList();
+
         for(int i = 0; i < count; i++)
         {
             auto vec = centers[i];
-            drawList->AddCircleFilled({vec.x, vec.y}, radius, b2Particle(colors[i]), 5);
+            ImU32 color;
+            if(colors)
+            {
+                color = b2pCtoIMU32(colors[i]);
+            } else {
+                color = 0xAAFFFFFF;
+            }
+            
+            drawList->AddCircleFilled(b2WorldToScreen({vec.x, vec.y}), 2 * radius * Camera::ppm, color, 1);
         }
     }
   };

@@ -66,21 +66,44 @@ void init()
 	world = new b2World(gravity);
     FooDraw* draw = new FooDraw();
     world->SetDebugDraw(draw);
-    draw->SetFlags(b2Draw::e_shapeBit);
+    draw->SetFlags(b2Draw::e_shapeBit | b2Draw::e_particleBit);
 
     Camera::x = -150;
     Camera::y = -150;
     Camera::screen_margin_x = 0.35f;
     Camera::screen_margin_y = 0.35f;
     Camera::speed = 6;
-    Camera::ppm = 8;
+    Camera::ppm = 10;
 
     sun.Instantiate(world);
     cloud.Instantiate(world);
-    terrain.Initialize(world, 45, 0, 128, 128, 32);
+    terrain.Initialize(world, 0, 0, 100, 128, 128, 32);
     terrain.Generate(world, [](int,float x){return (float)(((int)(x/32)) * 1);});
     animal.Instantiate(world);
     animal.body->SetTransform({60, 10}, 0);
+
+    b2ParticleSystemDef psystemdef;
+    
+       
+
+    b2ParticleGroupDef pgroupdef;
+    pgroupdef.position = {2,50};
+    
+
+    b2CircleShape shape;
+    shape.m_radius = 10;
+
+    pgroupdef.shape = &shape;
+
+
+    auto system = world->CreateParticleSystem(&psystemdef);
+    system->SetRadius(0.5f);
+    system->CreateParticleGroup(pgroupdef);
+}
+
+void OffsetCurve(float )
+{
+
 }
 
 void update()
@@ -102,11 +125,28 @@ void update()
 
         float mx, my;
         Input::MousePos(&mx, &my);
+        static float start_x;
+        start_x = Camera::ScreenToBox2D({mx,0}).x;
+        //terrain.WriteHeightMapOffset(aaa, 20, Camera::ScreenToBox2D({mx,0}).x);
 
-        terrain.WriteHeightMapOffset(aaa, 20, Camera::ScreenToBox2D({mx,0}).x);
+        static float pit_length;
+        pit_length = terrain.GetDistance(20);
+        
+        static int pit_width_verts = 20;
+        
+        pit_width_verts = terrain.GetVertsForDistance(pit_length);
+
+        const int pit_depth = 10;
+
+        
+        auto func = [](int i,float f) -> float
+        {
+            return sin( ((f) / pit_length) * M_PI ) * -pit_depth;  
+        };
+        terrain.WriteHeightmapProceduralOffset(func, pit_width_verts, start_x - pit_length/2);
         terrain.RegenerateChunks();
       }
-    world->Step(1.f/60.0f, 6, 2);
+    world->Step(1.f/60.0f, 6, 2, 3);
    // ImGui::Text("it finally works");
 }
 char IMGNAME[256] = {0};

@@ -17,6 +17,7 @@ void Unit::Follow()
     dir *= ((b>a)?a:b) * 0.1f;
     dir += body->GetPosition();
     body->SetTransform(dir, 0);
+    body->SetLinearVelocity({0,0});
 }
 
 void Unit::BaseUnitUpdate()
@@ -26,8 +27,10 @@ void Unit::BaseUnitUpdate()
         if(BZZRE::Input::MouseUp(SAPP_MOUSEBUTTON_LEFT)) 
         {
             lock = false;
-        }else return;
-    }
+        }else {
+            Follow();
+                        return;
+    }}
     if(BZZRE::Input::MouseClick(SAPP_MOUSEBUTTON_LEFT))
     {
         hmm_v2 pos;
