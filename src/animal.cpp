@@ -1,4 +1,5 @@
 #include "animal.hpp"
+#include "stdio.h"
 Animal::Animal()
 {
     type = Constants::PC_ANIMAL;
@@ -8,6 +9,12 @@ void Animal::GetScared(float scare_x)
 {
     direction = sgn(body->GetPosition().x - scare_x);;
     body->ApplyLinearImpulse({direction * 5 * body->GetMass(),6 * body->GetMass()},  body->GetPosition(), true);
+}
+
+void Animal::OnParticleColisionEnter(b2ParticleSystem* particleSystem,
+                               b2ParticleBodyContact* particleBodyContact) 
+{
+    printf("yey worter.\n");
 }
 
 b2Body* Animal::CreateBody(b2World* world)
@@ -22,7 +29,7 @@ b2Body* Animal::CreateBody(b2World* world)
     
     b2FixtureDef def;
     def.restitution = 0.25f;
-    def.density = 40;
+    def.density = 1.2f;
     def.friction = 0.15f;
     def.shape = &shape;
     def.filter.categoryBits = Constants::PC_ANIMAL;

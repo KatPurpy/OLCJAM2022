@@ -5,6 +5,7 @@
 class PhysicsEntity
 {
     public:
+        bool dead{};
         Constants::PhysicsCategory type;
         b2Body* body;
         void Instantiate(b2World*);
@@ -12,4 +13,8 @@ class PhysicsEntity
         virtual void Update() = 0;
         virtual void Draw() = 0;
         virtual void OnCollisionEnter(b2Body* otherBody) = 0;
+        virtual void OnParticleColisionEnter(b2ParticleSystem* particleSystem,
+                                b2ParticleBodyContact* particleBodyContact);
+        virtual void Destroy(bool silent);
+        ~PhysicsEntity();
 };

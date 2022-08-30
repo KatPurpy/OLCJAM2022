@@ -6,21 +6,28 @@ namespace Camera
 } 
 
 hmm_v2 Camera::Box2DToScreen(b2Vec2 vec) {
-    return {-Camera::x + vec.x * Camera::ppm, -Camera::y + -vec.y * Camera::ppm};
+    return {(-Camera::x + vec.x) * Camera::ppm, (-Camera::y + -vec.y) * Camera::ppm};
 }
-
+#include "stdio.h"
 b2Vec2 Camera::ScreenToBox2D(hmm_v2 vec) 
 {
-    return {(Camera::x + vec.X) / Camera::ppm, (-Camera::y -vec.Y) / Camera::ppm};
+    b2Vec2 out = {Camera::x + (vec.X) / Camera::ppm, -Camera::y + (-vec.Y) / Camera::ppm};
+    return out;
 }
 
-void Camera::MouseMovement(float mx, float my)
+void Camera::MouseMovement(float mx, float my, float ms)
 {
     float margin_x = screen_margin_x;
     float margin_y = screen_margin_y;
     float camspeed = speed;
 
-   
+    if(ms != 0)
+    {
+        ppm += ms;
+        if(ppm > 16) ppm = 16;
+        if(ppm < 4) ppm = 4;
+    }
+
     if(mx < margin_x)
     {
         float factor = (1 - mx/margin_x);

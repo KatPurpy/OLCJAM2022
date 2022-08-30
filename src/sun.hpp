@@ -12,4 +12,7 @@ class Sun : public Unit
         void Draw();
         b2Body* CreateBody(b2World*);
         void OnCollisionEnter(b2Body*);
+        void Destroy(bool silent);
+        void OnParticleColisionEnter(b2ParticleSystem* particleSystem,
+                               b2ParticleBodyContact* particleBodyContact) ;
 };

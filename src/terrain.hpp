@@ -53,6 +53,13 @@ class Terrain {
     return distance / m_distBetweenVecs;
   }
 
+  float GetHeightAt(float place)
+  {
+      int localoffset = place - m_offset.X;
+      int index = localoffset / m_distBetweenVecs;
+      return m_heightmap[index];
+  }
+
   void Initialize(b2World* world, float start_x, float start_y, float max_depth, float length, int num_verts, int verts_per_chunk)
   {
       assert(max_depth > 0);

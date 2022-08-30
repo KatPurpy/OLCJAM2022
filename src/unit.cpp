@@ -6,6 +6,17 @@ Unit::Unit()
     type = Constants::PC_PLAYERUNIT;    
 }
 
+Unit::~Unit()
+{
+    if(!destroyed)     Destroy(true);
+}
+
+void Unit::SetPosition(b2Vec2 pos)
+{
+    body->SetTransform(pos, 0);
+    targetpos = pos;
+}
+
 void Unit::Follow()
 {
     auto thing = targetpos;

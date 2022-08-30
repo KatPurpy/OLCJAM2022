@@ -9,12 +9,14 @@ class Unit : public PhysicsEntity
         static inline Unit* current;
         b2Vec2 targetpos;
         float m_maxspeed;
-        bool lock;
+        bool lock = false; 
+        bool destroyed;
         void BaseUnitUpdate();
         void IsClickOnMe();
         virtual void Ability() = 0;
     public:
         Unit();
+        ~Unit();
         void Follow();
-        
+        void SetPosition(b2Vec2 vec);
 };

@@ -15,9 +15,15 @@ void Sun::Draw()
 
 }
 
+void Sun::Destroy(bool silent)
+{
+    
+}
+
 void Sun::Ability()
 {
     printf("BZZZZZ\n");
+
 }
 
 b2Body* Sun::CreateBody(b2World* world)
@@ -40,3 +46,12 @@ b2Body* Sun::CreateBody(b2World* world)
 void Sun::OnCollisionEnter(b2Body*) {
     
 }
+
+void Sun::OnParticleColisionEnter(b2ParticleSystem* particleSystem,
+                               b2ParticleBodyContact* particleBodyContact)
+                               {
+                                particleSystem->SetParticleFlags(particleBodyContact->index, b2ParticleFlag::b2_zombieParticle);
+                                b2ParticleDef def;
+                                
+                                
+                               }
