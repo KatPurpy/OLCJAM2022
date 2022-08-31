@@ -1,6 +1,18 @@
 #pragma once
 namespace Constants
 {
+    struct GpuBufferVertex
+    {
+
+        float x, y, z;			  //	4	*	3	=	12
+        unsigned char r, g, b, a; //	4
+        unsigned short u, v;	  //	2*2	=	4
+                                //	12	+	4	+	4	=	20
+
+    };
+
+    using GpuBufferIndex = uint32_t;
+
     inline float fireLifetime = 10;
     inline float fireSmokeThreshold = 7;
     inline void* particleFireTag = (void*)(0xBABEBABE);

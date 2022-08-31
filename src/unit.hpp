@@ -7,7 +7,7 @@ class Unit : public PhysicsEntity
 {
     protected:
         static inline Unit* current;
-
+        float ability_cooldown;
         float m_maxspeed;
         bool lock = false; 
         bool destroyed;

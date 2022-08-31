@@ -58,13 +58,17 @@ void Unit::BaseUnitUpdate()
 
         if(Unit::current == this && testpoint)
         {
-            Ability();
+            if(ability_cooldown < 0)
+            {
+                Ability();
+                ability_cooldown = 0.25f;
+            }
             lock = true;
             return;
         }
     } else 
 
-    
+    ability_cooldown -= 1./60.;
 
     if(Unit::current == this && BZZRE::Input::MouseDown(SAPP_MOUSEBUTTON_LEFT))
     {

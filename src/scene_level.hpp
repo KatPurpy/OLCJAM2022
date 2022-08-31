@@ -13,6 +13,7 @@
 #include "BZZRE/resources/image.hpp"
 #include "gradient_fire.h"
 #include "leveldata.hpp"
+#include "animalsafezone.hpp"
 
 using namespace BZZRE;
 
@@ -126,6 +127,13 @@ static b2ParticleGroup* pSmokeGroup;
         }
     }
 
+
+static int NumAnimals;
+void SaveAnimal(Animal* animal)
+{
+    animal->Destroy(true);
+}
+
 struct SceneLevel
 {
     static inline b2ParticleColor fireColorGradient[fire_gradient_width];
@@ -231,7 +239,13 @@ struct SceneLevel
 
         srand(time(NULL));   // Initialization, should only be called once.
         
-        
+        auto asz = new AnimalSafeZone();
+        asz->Instantiate(world);
+        asz->body->SetTransform({0,0},0);
+
+        asz = new AnimalSafeZone();
+        asz->Instantiate(world);
+        asz->body->SetTransform({128,0},0);
 
        // PutWater({50,20}, &shape);
     }

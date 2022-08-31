@@ -4,6 +4,7 @@
 #include "HandmadeMath.h"
 #include "constants.hpp"
 #include "earcut.hpp"
+#include "BZZRE/subsystems/graphics/vibuf.tcc"
 //#include "delaunator.hpp"
 class Terrain {
   struct WriteInfo
@@ -36,8 +37,9 @@ class Terrain {
     b2Body** chunkBodies;
     hmm_v2 m_offset;
     float m_max_depth;
+    
   public:
-   
+    //BZZRE::Graphics::VIBuf
     bool* m_chunk_is_dirty;
     float chunk_length;
     float m_num_chunks;

@@ -18,5 +18,6 @@ endforeach()
 
 FILE(GLOB_RECURSE src src/**.cpp src/**.c)
 add_executable(main ${src})
+target_include_directories(main PRIVATE 3rdparty)
 BZZRIZE(main)
 add_subdirectory(submodules)

@@ -7,7 +7,9 @@
 template <class T, Constants::PhysicsCategory type, bool allowNullData> 
 class OverlapCheck
 {
-    static inline T* cache = NULL; //prevent per frame allocations;
+    
+        public:
+        static inline T* cache = NULL; //prevent per frame allocations;
     template <typename shapeT>
     void GenericOverlap(b2World* world, b2BodyDef* def, shapeT* shape)
     {
@@ -21,7 +23,7 @@ class OverlapCheck
         body->CreateFixture(&fdef);
 
         world->Step(0, 0, 0, 0);
-        
+
 
         for(b2ContactEdge* edge = body->GetContactList(); edge; edge = edge->next)
         {
@@ -39,7 +41,7 @@ class OverlapCheck
         }
         world->DestroyBody(body);
     }
-    public:
+
     T* OverlapCircle(b2World* world, b2Vec2 vec, float radius)
     {
         b2BodyDef def;

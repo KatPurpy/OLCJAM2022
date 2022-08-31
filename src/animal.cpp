@@ -43,7 +43,7 @@ b2Body* Animal::CreateBody(b2World* world)
 void Animal::Jump()
 {
     float jumpforce = (rand()%6)/6. * 2;
-    jumptimer = (rand()%12)/12. * 4;
+    jumptimer = (rand()%12)/12. * 4 + 1;
     body->ApplyLinearImpulse({direction * 4 * jumpforce * body->GetMass(),8 * jumpforce * body->GetMass()},  body->GetPosition(), true);
 }
 
@@ -54,17 +54,17 @@ void Animal::Update()
     if(scared)
     {
         jumptimer -= 1.f / 60.f;
-        printf("jumptimer %f\n", jumptimer);
-
+      //  printf("jumptimer %f\n", jumptimer);
+        if(jumptimer < 0)
+        {
+            Jump();
+        }
         OverlapCheck<void*, Constants::PC_GROUND, true> check;
         void** discard = check.OverlapCircle(body->GetWorld(), body->GetWorldCenter(), 2);
         if(arrlen(discard) != 0)
         {
             body->ApplyForceToCenter(f * body->GetMass(), true);
-            if(jumptimer < 0)
-        {
-            Jump();
-        }
+
         }
     }
 }
@@ -76,4 +76,11 @@ void Animal::Draw()
 void Animal::OnCollisionEnter(b2Body* otherBody)
 {
 
+}
+
+void Animal::Destroy(bool silent)
+{
+    dead = true;
+    if(silent) return;
+    //TODO: play dead sound
 }
