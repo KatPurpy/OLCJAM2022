@@ -1,43 +1,52 @@
 #include "physicsentity.hpp"
 
-PhysicsEntity::~PhysicsEntity()
+PhysicsEntity::~PhysicsEntity() { body->GetWorld()->DestroyBody(body); }
+
+void
+PhysicsEntity::Update()
 {
-    body->GetWorld()->DestroyBody(body);
+	burnData.Update();
 }
 
-void PhysicsEntity::Update()
+void
+PhysicsEntity::Instantiate(b2World* world)
 {
-    burnData.Update();
+	this->body = CreateBody(world);
+	this->body->SetUserData((void*)this);
 }
-
-void PhysicsEntity::Instantiate(b2World* world)
+void
+PhysicsEntity::OnParticleColisionEnter(b2ParticleSystem* particleSystem, b2ParticleBodyContact* particleBodyContact)
 {
-    this->body = CreateBody(world);
-    this->body->SetUserData((void*)this);
-}
-void PhysicsEntity::OnParticleColisionEnter(b2ParticleSystem* particleSystem,
-                               b2ParticleBodyContact* particleBodyContact) 
-{
-    if(particleSystem->GetUserDataBuffer()[particleBodyContact->index] == Constants::particleFireTag
-    && particleSystem->GetParticleLifetime(particleBodyContact->index) >= Constants::fireSmokeThreshold
-    && canBeSetOnFire)
+    if(canBeSetOnFire)
     {
-        burnData.SetOnFire(this);
+        auto tag = particleSystem->GetUserDataBuffer()[particleBodyContact->index];
+        if(tag == Constants::particleFireTag
+        && particleSystem->GetParticleLifetime(particleBodyContact->index) >= Constants::fireSmokeThreshold)
+        {
+            burnData.SetOnFire(this);
+        }
+
+        if(tag == Constants::particleWaterTag)
+        {
+            burnData.PutoutFire();
+        }
     }
 }
 
-void PhysicsEntity::OnCollisionEnter(PhysicsEntity* other)
+void
+PhysicsEntity::OnCollisionEnter(PhysicsEntity* other)
 {
 
-    if(canBeSetOnFire && other->type & Constants::PC_BURNING)
-    {
-        burnData.SetOnFire(this);
-    }
+	if(canBeSetOnFire && other->type & Constants::PC_BURNING)
+	{
+		burnData.SetOnFire(this);
+	}
 }
 
 #include "stdio.h"
-void PhysicsEntity::Destroy(bool)
+void
+PhysicsEntity::Destroy(bool)
 {
-    dead = true;
-    printf("WARNING, A PHYSICS ENTITY DOES NOT HAVE Destroy() defined!\n");
+	dead = true;
+	printf("WARNING, A PHYSICS ENTITY DOES NOT HAVE Destroy() defined!\n");
 }

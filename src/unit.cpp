@@ -1,80 +1,86 @@
 #include "unit.hpp"
 #include "stdio.h"
 
-Unit::Unit()
-{
-    type = Constants::PC_PLAYERUNIT;    
-}
+Unit::Unit() { type = Constants::PC_PLAYERUNIT; }
 
 Unit::~Unit()
 {
-    if(!destroyed)     Destroy(true);
+	if(!destroyed)
+		Destroy(true);
 }
 
-void Unit::SetPosition(b2Vec2 pos)
+void
+Unit::SetPosition(b2Vec2 pos)
 {
-    body->SetTransform(pos, 0);
-    targetpos = pos;
+	body->SetTransform(pos, 0);
+	targetpos = pos;
 }
 
-void Unit::Follow()
+void
+Unit::Follow()
 {
-    auto thing = targetpos;
-    auto dir = thing - body->GetPosition();
-    auto distance = dir.Length();
-    dir.Normalize();
-    auto a = distance;
-    auto b = m_maxspeed;
-    dir *= ((b>a)?a:b) * 0.1f;
-    dir += body->GetPosition();
-    body->SetTransform(dir, 0);
-    body->SetLinearVelocity({0,0});
+	auto thing = targetpos;
+	auto dir = thing - body->GetPosition();
+	auto distance = dir.Length();
+	dir.Normalize();
+	auto a = distance;
+	auto b = m_maxspeed;
+	dir *= ((b > a) ? a : b) * 0.1f;
+	dir += body->GetPosition();
+	body->SetTransform(dir, 0);
+	body->SetLinearVelocity({ 0, 0 });
 }
 
-void Unit::BaseUnitUpdate()
+void
+Unit::BaseUnitUpdate()
 {
-    if(lock) 
-    {
-        if(BZZRE::Input::MouseUp(SAPP_MOUSEBUTTON_LEFT)) 
-        {
-            lock = false;
-        }else {
-            Follow();
-                        return;
-    }}
-    if(BZZRE::Input::MouseClick(SAPP_MOUSEBUTTON_LEFT))
-    {
-        hmm_v2 pos;
-        BZZRE::Input::MousePos(&pos.X, &pos.Y);
-        auto worldpos = Camera::ScreenToBox2D(pos);
-        auto fixture = body->GetFixtureList()[0]; //a unit always has only 1 fixture
-        auto testpoint = fixture.TestPoint(worldpos);
-        if(Unit::current != this && testpoint)
-        {
-            Unit::current = this;
-            lock = true;
-            return;
-        }
-
-        if(Unit::current == this && testpoint)
-        {
-            if(ability_cooldown < 0)
+	if(lock)
+	{
+        Follow();
+		if(BZZRE::Input::MouseUp(SAPP_MOUSEBUTTON_LEFT))
+		{
+			lock = false;
+		}
+        return;
+	}
+	if(BZZRE::Input::MouseClick(SAPP_MOUSEBUTTON_LEFT))
+	{
+		hmm_v2 pos;
+		BZZRE::Input::MousePos(&pos.X, &pos.Y);
+		auto worldpos = Camera::ScreenToBox2D(pos);
+		auto fixture = body->GetFixtureList()[0]; // a unit always has only 1 fixture
+		auto testpoint = fixture.TestPoint(worldpos);
+		if(Unit::current != this && testpoint)
+		{
+            if(Unit::current)
             {
-                Ability();
-                ability_cooldown = 0.25f;
+                Unit::current->targetpos = Unit::current->body->GetPosition();
             }
-            lock = true;
-            return;
-        }
-    } else 
+            Unit::current = this;
+			lock = true;
+			return;
+		}
 
-    ability_cooldown -= 1./60.;
-
-    if(Unit::current == this && BZZRE::Input::MouseDown(SAPP_MOUSEBUTTON_LEFT))
+		if(Unit::current == this && testpoint)
+		{
+			if(ability_cooldown < 0)
+			{
+				Ability();
+				ability_cooldown = 0.25f;
+			}
+			lock = true;
+			return;
+		}
+	}
+	else
     {
-        hmm_v2 pos;
-        BZZRE::Input::MousePos(&pos.X, &pos.Y);
-        targetpos = Camera::ScreenToBox2D(pos);
+        ability_cooldown -= 1. / 60.;
     }
-    Follow();
+	if(Unit::current == this && BZZRE::Input::MouseDown(SAPP_MOUSEBUTTON_LEFT))
+	{
+		hmm_v2 pos;
+		BZZRE::Input::MousePos(&pos.X, &pos.Y);
+		targetpos = Camera::ScreenToBox2D(pos);
+	}
+	Follow();
 }
