@@ -1,3 +1,4 @@
+#pragma once
 #include "physicsentity.hpp"
 
 template <typename T> int sgn(T val) {
@@ -7,9 +8,11 @@ template <typename T> int sgn(T val) {
 class Animal : public PhysicsEntity
 {
     private:
-        bool scared;
+        bool scared{};
         float direction;
         float speed;
+        float jumptimer{};
+        void Jump();
 
     public:
         Animal();

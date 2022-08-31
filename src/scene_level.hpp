@@ -1,6 +1,8 @@
 #pragma once
 #include "stdio.h"
 #include "BZZRE/subsystems/input.hpp"
+#include "constants.hpp"
+
 #include "sun.hpp"
 #include "cloud.hpp"
 #include "terrain.hpp"
@@ -10,15 +12,10 @@
 #include "time.h"
 #include "BZZRE/resources/image.hpp"
 #include "gradient_fire.h"
+#include "leveldata.hpp"
+
 using namespace BZZRE;
-static const void* particleFireTag = (const void*)(0xBABEBABE);
-struct SceneLevel
-{
-    static constexpr const float fireLifetime = 10;
-    static constexpr const float fireSmokeThreshold = 7;
-    static inline b2ParticleColor fireColorGradient[fire_gradient_width];
-    
-    
+
     class _contactListener : public b2ContactListener
     {
         /// Called when a fixture and particle start touching if the
@@ -54,21 +51,90 @@ struct SceneLevel
                                      auto buffer = particleSystem->GetUserDataBuffer();
                                      auto userdataA = buffer[particleIndexA];
                                      auto userdataB = buffer[particleIndexB];
-                                     return !(userdataA == particleFireTag && userdataB == particleFireTag);
+                                     return !(userdataA == Constants::particleFireTag && userdataB == Constants::particleFireTag);
                                }
+	virtual bool ShouldCollide(b2Fixture* fixture,
+							   b2ParticleSystem* particleSystem,
+							   int32 particleIndex)
+	{
+        PhysicsEntity* ent = (PhysicsEntity*)fixture->GetBody()->GetUserData();
+        if(ent)
+        {
+            if(ent->type == Constants::PC_CLOUD)
+            {
+                if(particleSystem->GetUserDataBuffer()[particleIndex] == Constants::particleWaterTag)
+                {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
     };
 
-    static inline b2World* world;
-    static inline Terrain* terrain;
-    static inline FooDraw* debugDraw;
-    static inline _presolver* particleFilter;
-    static inline _contactListener* contactListener;
 
-    static inline b2ParticleSystem* system;
-    static inline b2ParticleGroup* pwaterGroup;
+static b2World* world;
+static Terrain* terrain;
+static FooDraw* debugDraw;
+static _presolver* particleFilter;
+static _contactListener* contactListener;
 
-    static inline b2ParticleSystem* sfireSystem;
-    static inline b2ParticleGroup* pfireGroup;
+static b2ParticleSystem* sWaterSystem;
+static b2ParticleGroup* pwaterGroup;
+
+static b2ParticleSystem* sfireSystem;
+static b2ParticleGroup* pfireGroup;
+
+static b2ParticleSystem* sSmokeSystem;
+static b2ParticleGroup* pSmokeGroup;
+
+
+    void PutWater(b2Vec2 position, b2Shape* shape, float stride = 0)
+    {        
+        b2ParticleSystemDef psystemdef;
+        b2ParticleGroupDef pgroupdef;
+        pgroupdef.position = position;
+        pgroupdef.shape = shape;
+        pgroupdef.group = pwaterGroup;
+        pgroupdef.userData = Constants::particleWaterTag;
+        pgroupdef.color = {0,0,255,255};
+        pgroupdef.stride = stride;
+        pgroupdef.flags = b2ParticleFlag::b2_fixtureContactListenerParticle | b2ParticleFlag::b2_fixtureContactFilterParticle;
+        sWaterSystem->CreateParticleGroup(pgroupdef);
+    }
+
+    void WaterToSmoke(b2Vec2 pos, float radius)
+    {
+        b2CircleShape shape;
+        shape.m_radius = radius;
+        auto aaa = b2Transform(pos,b2Rot(0));
+        int num = sWaterSystem->DestroyParticlesInShape(shape, aaa);
+
+        if(num)
+        {
+            b2ParticleGroupDef def;
+            def.userData = Constants::particleSmokeTag;
+            shape.m_radius = HMM_SquareRootF(sSmokeSystem->GetRadius() * num / 3);
+            def.flags = b2ParticleFlag::b2_fixtureContactListenerParticle;
+            def.shape = &shape;
+            def.position = pos;
+            def.color = {255,255,255,64};
+            def.group = pSmokeGroup;
+            def.linearVelocity = {0, 5};
+            
+            sSmokeSystem->CreateParticleGroup(def);
+        }
+    }
+
+struct SceneLevel
+{
+    static inline b2ParticleColor fireColorGradient[fire_gradient_width];
+    
+    
+
+
+
+
 
     static void IterateEntities(void (*iterate)(PhysicsEntity*))
     {
@@ -89,23 +155,9 @@ struct SceneLevel
         }
     }
 
-    static void PutWater(b2Vec2 position, b2Shape* shape)
-    {        
-        b2ParticleSystemDef psystemdef;
-        b2ParticleGroupDef pgroupdef;
-        pgroupdef.position = position;
-        pgroupdef.shape = shape;
-        pgroupdef.group = pwaterGroup;
 
-        system->CreateParticleGroup(pgroupdef);
-        int numparticles = system->GetParticleCount();
-        auto colors = system->GetColorBuffer();
-        for(int i = 0; i < numparticles; i++)
-        {
-            colors[i] = {0,0,255,255};
-            system->SetParticleFlags(i,  b2ParticleFlag::b2_fixtureContactListenerParticle);
-        }
-    }
+
+
 
     static void Enter()
     {
@@ -155,20 +207,23 @@ struct SceneLevel
 
         b2ParticleSystemDef psystemdef;
         psystemdef.radius = 0.75f;
-        system = world->CreateParticleSystem(&psystemdef);
+        sWaterSystem = world->CreateParticleSystem(&psystemdef);
         
         psystemdef.gravityScale = -0;
         psystemdef.colorMixingStrength = 0.5f;
         psystemdef.maxCount = 2048;
         sfireSystem = world->CreateParticleSystem(&psystemdef);
+        psystemdef.gravityScale = -0.01f;
+        sSmokeSystem = world->CreateParticleSystem(&psystemdef);
 
         b2ParticleGroupDef groupdef;
         groupdef.groupFlags = b2ParticleGroupFlag::b2_particleGroupCanBeEmpty;
         
-        pwaterGroup = system->CreateParticleGroup(groupdef);
+        pwaterGroup = sWaterSystem->CreateParticleGroup(groupdef);
         
         pfireGroup = sfireSystem->CreateParticleGroup(groupdef);
 
+        pSmokeGroup = sSmokeSystem->CreateParticleGroup(groupdef);
         b2CircleShape shape;
         shape.m_radius = 5;
 
@@ -188,7 +243,7 @@ struct SceneLevel
         def.velocity = {((float)(rand() % 25)) / 25 * 8 - horizontal_speed/2, ((float)(rand() % 100)) / 100 * 5 + 5};
         def.position = pos;
         def.group = pfireGroup;
-        def.userData = (void*)particleFireTag;
+        def.userData = (void*)Constants::particleFireTag;
         def.flags = b2ParticleFlag::b2_particleContactFilterParticle;
         sfireSystem->CreateParticle(def);
         /*b2ParticleGroupDef groupdef;
@@ -204,6 +259,34 @@ struct SceneLevel
         //sfireSystem->CreateParticleGroup(groupdef);
         
     }
+    static void PutPit(float x, float width, float depth, bool water)
+    {
+        static float start_x;
+        static float pit_length;
+        static int pit_width_verts;
+        static float pit_depth ;
+        start_x = x;
+        pit_length = terrain->GetDistance(width);
+        pit_width_verts = terrain->GetVertsForDistance(pit_length);
+        pit_depth = depth;
+        
+        
+
+       
+        auto func = [](int i,float f) -> float
+        {
+            return sin( ((f) / pit_length) * M_PI ) * -pit_depth;  
+        };
+        terrain->WriteHeightmapProceduralOffset(func, pit_width_verts, start_x - pit_length/2);
+
+        if(water)
+        {
+            b2CircleShape shape;
+            shape.m_radius = pit_depth/2;
+            PutWater({start_x,terrain->GetHeightAt(start_x) + shape.m_radius*1.25f }, &shape);
+        }
+        terrain->RegenerateChunks();
+    }
     static void Update()
     {
                 world->Step(1.f/60.0f, 6, 2, 1);
@@ -213,37 +296,14 @@ struct SceneLevel
             Input::MousePos(&mx, &my);
             MakeFireParticle(Camera::ScreenToBox2D({mx,my}));
         }
-    if(Input::MouseClick(SAPP_MOUSEBUTTON_MIDDLE))
+        if(Input::MouseClick(SAPP_MOUSEBUTTON_MIDDLE))
       {
-        float aaa[20] = {5};
-        for(int i = 0; i < 20; i++) aaa[i] = -5;
-
         float mx, my;
         Input::MousePos(&mx, &my);
-        static float start_x;
-        start_x = Camera::ScreenToBox2D({mx,0}).x;
-        //terrain.WriteHeightMapOffset(aaa, 20, Camera::ScreenToBox2D({mx,0}).x);
-
-        static float pit_length;
-        pit_length = terrain->GetDistance(20);
+        float aaa = Camera::ScreenToBox2D({mx,my}).x;
+        PutPit(aaa, 20, 10, true);
         
-        static int pit_width_verts = 20;
-        
-        pit_width_verts = terrain->GetVertsForDistance(pit_length);
 
-        const int pit_depth = 10;
-
-       
-        auto func = [](int i,float f) -> float
-        {
-            return sin( ((f) / pit_length) * M_PI ) * -pit_depth;  
-        };
-        terrain->WriteHeightmapProceduralOffset(func, pit_width_verts, start_x - pit_length/2);
-        terrain->RegenerateChunks();
-        
-        b2CircleShape shape;
-        shape.m_radius = pit_depth/2;
-        PutWater({start_x,terrain->GetHeightAt(start_x) + shape.m_radius*1.25f }, &shape);
       }
         IterateEntities([](auto pe) {pe->Update();});
 
@@ -251,7 +311,7 @@ struct SceneLevel
         for(int i = 0; i < sfireSystem->GetParticleCount(); i++)
         {
             float time = sfireSystem->GetParticleLifetime(i);
-            int index = time/fireLifetime * (float)fire_gradient_width ;
+            int index = time/Constants::fireLifetime * (float)fire_gradient_width ;
             if(index < 0) index = 0;
             if(index > fire_gradient_width) index = fire_gradient_width - 1;
             colors[i] = fireColorGradient[index];

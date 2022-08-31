@@ -1,6 +1,11 @@
 #pragma once
 namespace Constants
 {
+    inline float fireLifetime = 10;
+    inline float fireSmokeThreshold = 7;
+    inline void* particleFireTag = (void*)(0xBABEBABE);
+    inline void* particleWaterTag = (void*)(0xBABABABA);
+    inline void* particleSmokeTag = (void*)(0xD00DD00D);
     enum PhysicsCategory
     {
         PC_INVALID = 0,
@@ -10,6 +15,8 @@ namespace Constants
         PC_ANIMAL = 1 << 4,
         PC_FOREST = 1 << 5,
         PC_ANIMALSENSOR = 1 << 6,
+        PC_WATER = 1 << 7,
+        PC_CLOUD = 1 << 8
     };
 
     enum COLLIDE

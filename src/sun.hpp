@@ -4,6 +4,8 @@
 class Sun : public Unit
 {
     protected:
+        const int cloudCost = 27;
+        int cloudMaterial {};
         void Ability();
     public:
         Sun();

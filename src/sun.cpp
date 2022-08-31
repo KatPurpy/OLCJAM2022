@@ -1,5 +1,6 @@
 #include "sun.hpp"
 #include "stdio.h"
+#include "cloud.hpp"
 Sun::Sun()
 {
     m_maxspeed = 20;
@@ -19,11 +20,21 @@ void Sun::Destroy(bool silent)
 {
     
 }
-
+void WaterToSmoke(b2Vec2 pos, float radius);
 void Sun::Ability()
 {
     printf("BZZZZZ\n");
-
+    if(cloudMaterial >= cloudCost)
+    {
+        cloudMaterial -= cloudCost;
+    Cloud* c = new Cloud();
+    c->Instantiate(body->GetWorld());
+    c->body->SetTransform(body->GetPosition(), 0);
+    c->targetpos = body->GetPosition();
+    c->targetpos += {0, 10};
+    } else {
+     WaterToSmoke(body->GetPosition() - b2Vec2(0,8), 8);
+    }
 }
 
 b2Body* Sun::CreateBody(b2World* world)
@@ -50,8 +61,14 @@ void Sun::OnCollisionEnter(b2Body*) {
 void Sun::OnParticleColisionEnter(b2ParticleSystem* particleSystem,
                                b2ParticleBodyContact* particleBodyContact)
                                {
-                                particleSystem->SetParticleFlags(particleBodyContact->index, b2ParticleFlag::b2_zombieParticle);
-                                b2ParticleDef def;
+                                void* tag = particleSystem->GetUserDataBuffer()[particleBodyContact->index];
                                 
+                               if(tag == Constants::particleSmokeTag)
+                               {
+                                    particleSystem->SetParticleFlags(particleBodyContact->index, b2ParticleFlag::b2_zombieParticle);
+                                    cloudMaterial++;
+                                    printf("cloudMaterial %i", cloudMaterial);
+                                }
                                 
+                                //TODO: MAKE SMOKE
                                }

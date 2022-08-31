@@ -40,8 +40,8 @@ class FooDraw : public b2Draw
     }
     void DrawSolidPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color) 
     {
-        DrawPolygon(vertices, vertexCount, color);
-        return;
+        //DrawPolygon(vertices, vertexCount, color);
+        //return;
         auto drawlist = ImGui::GetBackgroundDrawList();
         ImVec2 vectors[vertexCount];
         for(int i = 0; i < vertexCount; i++)

@@ -7,7 +7,9 @@
 Cloud::Cloud()
 {
     m_maxspeed = 5;
+    type = Constants::PC_CLOUD;
 }
+void PutWater(b2Vec2 position, b2Shape* shape, float stride);
 
 void Cloud::Update() {
     BaseUnitUpdate();
@@ -28,6 +30,10 @@ void Cloud::Ability()
     {
         animals[i]->GetScared(pos.x);
     }
+    b2CircleShape shape;
+    shape.m_radius =  body->GetFixtureList()->GetShape()->m_radius * 0.75f;
+    PutWater(body->GetPosition(), &shape, 0);
+    dead = true;
     /*//HACK: MUST IMPLEMENT PROPER OVERLAP TESTS INSTEAD OF THIS MESS.
     b2Vec2 lowerBound, upperBound;
     lowerBound = pos;

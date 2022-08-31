@@ -7,7 +7,7 @@ class Unit : public PhysicsEntity
 {
     protected:
         static inline Unit* current;
-        b2Vec2 targetpos;
+
         float m_maxspeed;
         bool lock = false; 
         bool destroyed;
@@ -17,6 +17,7 @@ class Unit : public PhysicsEntity
     public:
         Unit();
         ~Unit();
+                b2Vec2 targetpos;
         void Follow();
         void SetPosition(b2Vec2 vec);
 };

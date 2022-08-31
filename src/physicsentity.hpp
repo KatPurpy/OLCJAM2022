@@ -6,6 +6,11 @@ class PhysicsEntity
 {
     public:
         bool dead{};
+        bool canBeSetOnFire;
+        bool onFire;
+        bool wet;
+        float health; //in seconds
+
         Constants::PhysicsCategory type;
         b2Body* body;
         void Instantiate(b2World*);
