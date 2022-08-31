@@ -1,0 +1,17 @@
+BasedOnStyle: GNU
+IndentWidth: 4
+TabWidth: 4
+ColumnLimit: 120
+BreakBeforeBraces: Allman
+SortIncludes: Never
+FixNamespaceComments: true # add commend at end:
+NamespaceIndentation: All #intend content of namespace
+UseTab: Always
+SpaceBeforeParens: Never
+---
+Language: Cpp
+# Force pointers to the type for C++.
+DerivePointerAlignment: false
+PointerAlignment: Left
+MacroBlockBegin: "JSOD_BEGIN|JSOBJECT_BEGIN"
+MacroBlockEnd: "JSOD_END|JSOBJECT_END"

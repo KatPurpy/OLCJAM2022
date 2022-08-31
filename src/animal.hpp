@@ -20,8 +20,5 @@ class Animal : public PhysicsEntity
         b2Body* CreateBody(b2World* world);
         void Update();
         void Draw();
-        void OnCollisionEnter(b2Body* otherBody);
-        void OnParticleColisionEnter(b2ParticleSystem* particleSystem,
-                               b2ParticleBodyContact* particleBodyContact) ;
         void Destroy(bool);
 };

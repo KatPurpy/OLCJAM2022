@@ -12,44 +12,33 @@ class AnimalSafeZone : public PhysicsEntity
         
         b2BodyDef def;
         def.type = b2_staticBody;
-
+        
         auto body = world->CreateBody(&def);
         
         b2FixtureDef fdef;
         fdef.isSensor = true;
         fdef.shape = &shape;
+        fdef.filter.categoryBits = Constants::PC_ANIMALSENSOR;
+        fdef.filter.maskBits = Constants::ANIMALSENSOR_COLLIDESWITH;
         body->CreateFixture(&fdef);
         return body;
     }
     void Update()
     {
-        
-        OverlapCheck<Animal*, Constants::PC_ANIMAL, false> check;
-        
-        b2PolygonShape shape;
-        shape.SetAsBox(2, 100);
-        
-        b2BodyDef def;
-        def.type = b2_staticBody;
-        def.position = body->GetPosition();
 
-        check.GenericOverlap(body->GetWorld(), &def, &shape);
-        
-        Animal** animalList = OverlapCheck<Animal*, Constants::PC_ANIMAL, false> ::cache;
-        if(arrlen(animalList))
-        {
-            for(int i = 0; i < arrlen(animalList); i++)
-            {
-                SaveAnimal(animalList[i]);
-            }
-        }
     }
     void Draw()
     {
 
     }
-    void OnCollisionEnter(b2Body* otherBody)
+    void OnCollisionEnter(PhysicsEntity* otherBody)
     {
-        //printf("IT WORKS\n");
+        printf("GOT TYPE %i\n", otherBody->type);
+        if(otherBody->type & Constants::PC_ANIMAL)
+        {
+            printf("IT WORKS\n");
+            SaveAnimal((Animal*)otherBody);
+        }
+
     }
 };

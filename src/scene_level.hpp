@@ -19,6 +19,27 @@ using namespace BZZRE;
 
     class _contactListener : public b2ContactListener
     {
+        bool isParticle(void* data)
+        {
+            return 0 != data && data < Constants::maxParticleTag; 
+        }
+        void BeginContact(b2Contact* contact) 
+        { 
+            if(contact->IsTouching())
+            {
+                auto userDataA = (PhysicsEntity*)contact->GetFixtureA()->GetBody()->GetUserData();
+                auto userDataB = (PhysicsEntity*)contact->GetFixtureB()->GetBody()->GetUserData();
+                
+                if(userDataA && userDataB && !isParticle(userDataA) && !isParticle(userDataB))
+                {
+                    printf("%p %p\n",userDataA, userDataB);
+                    userDataA->OnCollisionEnter(userDataB);
+                    userDataB->OnCollisionEnter(userDataA);
+                }
+            }
+            //B2_NOT_USED(contact); 
+        }
+
         /// Called when a fixture and particle start touching if the
         /// b2_fixtureContactFilterParticle flag is set on the particle.
         void BeginContact(b2ParticleSystem* particleSystem,
@@ -68,17 +89,25 @@ using namespace BZZRE;
                     return false;
                 }
             }
+
+            if(particleSystem->GetUserDataBuffer()[particleIndex] == Constants::particleFireTag && (ent->type & Constants::PC_BURNING))
+            {
+                return false;
+            }
         }
         return true;
     }
     };
 
 
+
+
 static b2World* world;
 static Terrain* terrain;
-static FooDraw* debugDraw;
-static _presolver* particleFilter;
-static _contactListener* contactListener;
+
+static FooDraw debugDraw;
+static _presolver particleFilter;
+static _contactListener contactListener;
 
 static b2ParticleSystem* sWaterSystem;
 static b2ParticleGroup* pwaterGroup;
@@ -89,6 +118,26 @@ static b2ParticleGroup* pfireGroup;
 static b2ParticleSystem* sSmokeSystem;
 static b2ParticleGroup* pSmokeGroup;
 
+void MakeFireParticle(b2Vec2 pos)
+    {
+        b2ParticleDef def;
+        float horizontal_speed = 6;
+        def.lifetime = ((float)(rand() % 4)) / 4 * 4 + 6;
+        def.velocity = {((float)(rand() % 25)) / 25 * 8 - horizontal_speed/2, ((float)(rand() % 100)) / 100 * 5 + 5};
+        def.position = pos;
+        def.group = pfireGroup;
+        def.userData = (void*)Constants::particleFireTag;
+        def.flags = b2ParticleFlag::b2_particleContactFilterParticle | b2ParticleFlag::b2_fixtureContactFilterParticle | b2ParticleFlag::b2_fixtureContactListenerParticle;
+        sfireSystem->CreateParticle(def);
+    }
+
+#define allocThing(type, name, ...) if(allocate) name = new type(__VA_ARGS__); else delete name;
+static void AllocateWorld(bool allocate)
+{
+    allocThing(Terrain, terrain);
+    allocThing(b2World, world, {0,-10});
+}
+#undef allocThing
 
     void PutWater(b2Vec2 position, b2Shape* shape, float stride = 0)
     {        
@@ -138,12 +187,6 @@ struct SceneLevel
 {
     static inline b2ParticleColor fireColorGradient[fire_gradient_width];
     
-    
-
-
-
-
-
     static void IterateEntities(void (*iterate)(PhysicsEntity*))
     {
         b2Body* node = world->GetBodyList();
@@ -169,6 +212,8 @@ struct SceneLevel
 
     static void Enter()
     {
+        AllocateWorld(true);
+
         {
             char* data = fire_gradient_data;
             for(int i = 0; i < fire_gradient_width; i++)
@@ -185,11 +230,12 @@ struct SceneLevel
 
         // Construct a world object, which will hold and simulate the rigid bodies.
         world = new b2World(gravity);
-        world->SetDebugDraw(debugDraw = new FooDraw());
-        debugDraw->SetFlags(b2Draw::e_shapeBit | b2Draw::e_particleBit);
+        world->SetDebugDraw(&debugDraw);
+        world->SetContactFilter(&particleFilter);
+        world->SetContactListener(&contactListener);
+
+        debugDraw.SetFlags(b2Draw::e_shapeBit | b2Draw::e_particleBit);
         
-        world->SetContactFilter(particleFilter = new _presolver());
-        world->SetContactListener(contactListener = new _contactListener());
 
         Camera::x = 0;
         Camera::y = 0;
@@ -248,30 +294,6 @@ struct SceneLevel
         asz->body->SetTransform({128,0},0);
 
        // PutWater({50,20}, &shape);
-    }
-    static void MakeFireParticle(b2Vec2 pos)
-    {
-        b2ParticleDef def;
-        float horizontal_speed = 6;
-        def.lifetime = ((float)(rand() % 4)) / 4 * 4 + 6;
-        def.velocity = {((float)(rand() % 25)) / 25 * 8 - horizontal_speed/2, ((float)(rand() % 100)) / 100 * 5 + 5};
-        def.position = pos;
-        def.group = pfireGroup;
-        def.userData = (void*)Constants::particleFireTag;
-        def.flags = b2ParticleFlag::b2_particleContactFilterParticle;
-        sfireSystem->CreateParticle(def);
-        /*b2ParticleGroupDef groupdef;
-        groupdef.position = pos;
-        b2Vec2 aaa[1] = {{0,0}};
-        groupdef.positionData = aaa;
-        groupdef.particleCount = 1;
-        groupdef.group = pfireGroup;
-        
-        groupdef.lifetime = ((float)(rand() % 1000)) / 1000 * 5 + 5;
-        groupdef.linearVelocity = {((float)(rand() % 25)) / 25 * 5 - 2.5f, ((float)(rand() % 100)) / 100 * 5 + 5};
-*/
-        //sfireSystem->CreateParticleGroup(groupdef);
-        
     }
     static void PutPit(float x, float width, float depth, bool water)
     {
@@ -345,10 +367,6 @@ struct SceneLevel
 
     static void Leave()
     {
-        delete terrain;
-        delete world;
-        delete debugDraw;
-        delete contactListener;
-        delete particleFilter;
+        AllocateWorld(false);
     }
 } ;

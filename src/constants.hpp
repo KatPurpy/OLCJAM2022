@@ -13,11 +13,16 @@ namespace Constants
 
     using GpuBufferIndex = uint32_t;
 
+    //warning: lifetime during fire creation does not respect this value
     inline float fireLifetime = 10;
-    inline float fireSmokeThreshold = 7;
-    inline void* particleFireTag = (void*)(0xBABEBABE);
-    inline void* particleWaterTag = (void*)(0xBABABABA);
-    inline void* particleSmokeTag = (void*)(0xD00DD00D);
+    //141 - color at which the fire is not of fire color
+    //256 - color table length (yes it's all hardcoded)
+    //10 - fire lifetime
+    inline float fireSmokeThreshold = 141./256. * fireLifetime;
+    inline void* particleFireTag = (void*)(0x1);
+    inline void* particleWaterTag = (void*)(0x2);
+    inline void* particleSmokeTag = (void*)(0x3);
+    inline void* maxParticleTag = (void*)(0x4);
     enum PhysicsCategory
     {
         PC_INVALID = 0,
@@ -28,16 +33,19 @@ namespace Constants
         PC_FOREST = 1 << 5,
         PC_ANIMALSENSOR = 1 << 6,
         PC_WATER = 1 << 7,
-        PC_CLOUD = 1 << 8
+        PC_CLOUD = 1 << 8,
+        PC_FIRE = 1 << 9,
+        PC_BURNING = 1 << 10
     };
 
     enum COLLIDE
     {
         GROUND_COLLIDESWITH = PC_PLAYERUNIT | PC_ANIMAL | PC_BUILDING | PC_FOREST,
         PLAYERWEATHER_COLLIDESWITH = PC_PLAYERUNIT | PC_ANIMAL | PC_GROUND | PC_BUILDING | PC_FOREST,
-        ANIMAL_COLLIDESWITH = PC_PLAYERUNIT | PC_GROUND | PC_FOREST,
+        ANIMAL_COLLIDESWITH = PC_PLAYERUNIT | PC_ANIMALSENSOR | PC_GROUND | PC_FOREST,
         BUILDING_COLLIDESSWITH = PC_PLAYERUNIT | PC_GROUND | PC_FOREST, //third one is to make sure fire spreads to forest as well
         PLAYERUNIT_COLLIDESWITH = PC_GROUND,
-        ANIMALSENSOR_COLLIDESWITH = PC_ANIMAL
+        ANIMALSENSOR_COLLIDESWITH = PC_ANIMAL,
+        FIRE_COLLIDESWITH = ~PC_BURNING
     };
 } 

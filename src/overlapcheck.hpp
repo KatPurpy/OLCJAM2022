@@ -48,7 +48,7 @@ class OverlapCheck
         def.awake = true;
         def.type = b2_dynamicBody;
         def.position = vec;
-        def.userData = (void*)0xBEEFBEEF;
+        def.userData = (void*)0;
 
         b2CircleShape shape;
         shape.m_radius = radius;

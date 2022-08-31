@@ -3,6 +3,7 @@
 Animal::Animal()
 {
     type = Constants::PC_ANIMAL;
+    canBeSetOnFire = true;
 }
 
 void Animal::GetScared(float scare_x)
@@ -12,11 +13,6 @@ void Animal::GetScared(float scare_x)
     scared = true;
 }
 
-void Animal::OnParticleColisionEnter(b2ParticleSystem* particleSystem,
-                               b2ParticleBodyContact* particleBodyContact) 
-{
-    printf("yey worter.\n");
-}
 
 b2Body* Animal::CreateBody(b2World* world)
 {
@@ -67,13 +63,10 @@ void Animal::Update()
 
         }
     }
+    PhysicsEntity::Update();
 }
+
 void Animal::Draw()
-{
-
-}
-
-void Animal::OnCollisionEnter(b2Body* otherBody)
 {
 
 }
