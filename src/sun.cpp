@@ -23,7 +23,6 @@ void WaterToSmoke(b2Vec2 pos, float radius);
 void
 Sun::Ability()
 {
-	printf("BZZZZZ\n");
 	if(cloudMaterial >= cloudCost)
 	{
 		cloudMaterial -= cloudCost;
@@ -45,7 +44,7 @@ Sun::Ability()
         auto ret = check.OverlapCircle(body->GetWorld(), pos, radius);
         for(int i = 0; i < arrlen(ret); i++)
         {
-            ret[i]->burnData.SetOnFire(ret[i]);
+            ret[i]->burnData.SetOnFireImmediate(ret[i]);
         }
 	}
 }
@@ -82,7 +81,6 @@ Sun::OnParticleColisionEnter(b2ParticleSystem* particleSystem, b2ParticleBodyCon
 	{
 		particleSystem->SetParticleFlags(particleBodyContact->index, b2ParticleFlag::b2_zombieParticle);
 		cloudMaterial++;
-		printf("cloudMaterial %i", cloudMaterial);
 	}
 
 	// TODO: MAKE SMOKE

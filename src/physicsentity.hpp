@@ -2,8 +2,9 @@
 #include "Box2D.h"
 #include "constants.hpp"
 #include "HandmadeMath.h"
+#include "BZZRE/subsystems/graphics/spritedrawparams.h"
 void MakeFireParticle(b2Vec2);
-
+void AddSprite(BZZRE::Graphics::SpriteDrawParams& params);
 class PhysicsEntity
 {
   public:
@@ -14,14 +15,21 @@ class PhysicsEntity
 		float wetTime{};
 		float health = 5; // in seconds
         int fireHP = 15;
+		int particleThreshold = 200;
 		const float fireEmitInterval = 0.15f;
 		float fireTime{};
 
 		inline void
 		SetOnFire(PhysicsEntity* body)
 		{
-			if(onFire)
+			if(particleThreshold-- || onFire)
 				return;
+			SetOnFireImmediate(body);
+		}
+
+		inline void
+		SetOnFireImmediate(PhysicsEntity* body)
+		{
 			this->body = body;
 			body->type = (Constants::PhysicsCategory)((uint16_t)body->type | (uint16_t)Constants::PC_BURNING);
 			onFire = true;
@@ -55,7 +63,7 @@ class PhysicsEntity
 			}
 			if(health < 0)
 			{
-				body->dead = true;
+				body->Kill(false);
 			}
 		}
 
@@ -92,6 +100,6 @@ class PhysicsEntity
 	virtual void Draw() = 0;
 	virtual void OnCollisionEnter(PhysicsEntity* otherBody);
 	virtual void OnParticleColisionEnter(b2ParticleSystem* particleSystem, b2ParticleBodyContact* particleBodyContact);
-	virtual void Destroy(bool silent);
+	virtual void Kill(bool silent);
 	~PhysicsEntity();
 };

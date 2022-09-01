@@ -23,5 +23,5 @@ class Animal : public PhysicsEntity
 	b2Body* CreateBody(b2World* world);
 	void Update();
 	void Draw();
-	void Destroy(bool);
+	void Kill(bool);
 };

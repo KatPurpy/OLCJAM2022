@@ -10,15 +10,9 @@
 #include "statemanagement.hpp"
 #include "scene_level.hpp"
 using namespace BZZRE;
+using GameSpriteDrawList = Graphics::SpriteDrawList<Constants::GpuBufferVertex, Constants::GpuBufferIndex>;
 
-typedef struct
-{
-	float x, y, z;			  //	4	*	3	=	12
-	unsigned char r, g, b, a; //	4
-	unsigned short u, v;	  //	2*2	=	4
-							  //	12	+	4	+	4	=	20
-} vert;
-Graphics::SpriteDrawList<vert, uint16_t>* drawList;
+GameSpriteDrawList* drawList;
 sg_pipeline spritePipeline;
 sg_bindings bind;
 
@@ -27,15 +21,23 @@ BZZRE::Graphics::UniformParams uparams = { { SG_RANGE(params) } };
 BZZRE::SpriteSheet* sheet;
 
 void
+AddSprite(BZZRE::Graphics::SpriteDrawParams& params)
+{
+	params.uniforms = &uparams;
+	params.pipeline = spritePipeline;
+	drawList->Add(params);
+}
+
+void
 init()
 {
 	Assets::AddDirectory("assets");
 	Shaders::Add("simpleimg", SimpleSpriteShader_default2D_shader_desc);
 
-	drawList = new Graphics::SpriteDrawList<vert, uint16_t>(4 * 100, 6 * 100, 4 * 2048, 6 * 2048);
+	drawList = new GameSpriteDrawList(4 * 100, 6 * 100, 4 * 2048, 6 * 2048);
 	sg_shader shd = Shaders::Get("simpleimg");
 
-	auto pipdesc = Graphics::PipelineBuilder(SG_INDEXTYPE_UINT16, shd)
+	auto pipdesc = Graphics::PipelineBuilder(SG_INDEXTYPE_UINT32, shd)
 					   .Blend(0, SG_BLENDFACTOR_SRC_ALPHA, SG_BLENDFACTOR_ONE_MINUS_SRC_ALPHA)
 					   .Attribute(ATTR_SimpleSpriteShader_vs_pos, SG_VERTEXFORMAT_FLOAT3)
 					   .Attribute(ATTR_SimpleSpriteShader_vs_color0, SG_VERTEXFORMAT_UBYTE4N)
@@ -69,7 +71,8 @@ draw()
 	params.mvp = HMM_Orthographic(0.f, sapp_widthf(), sapp_heightf(), 0, 0.01f, 100.f);
 
 	StateManagement::Draw();
-
+	drawList->Draw({});
+	drawList->Clear();
 	simgui_render();
 	sg_end_pass();
 }

@@ -6,6 +6,7 @@
 #include "earcut.hpp"
 #include "BZZRE/subsystems/graphics/vibuf.tcc"
 //#include "delaunator.hpp"
+using TerrainVertexBuffer = BZZRE::Graphics::VIBuf<Constants::GpuBufferVertex, Constants::GpuBufferIndex>;
 class Terrain
 {
 	struct WriteInfo
@@ -36,13 +37,14 @@ class Terrain
   protected:
 	b2World* m_world;
 	float* m_heightmap;
+	sg_color* m_heigthmap_colors;
 	float m_distBetweenVecs;
 	b2Body** chunkBodies;
 	hmm_v2 m_offset;
 	float m_max_depth;
 
   public:
-	// BZZRE::Graphics::VIBuf
+	TerrainVertexBuffer* buffer;
 	bool* m_chunk_is_dirty;
 	float chunk_length;
 	float m_num_chunks;
@@ -211,5 +213,11 @@ class Terrain
 	{
 		WriteHeightmapProcedural(heightFunc, arrlen(m_heightmap), m_offset.X);
 		RegenerateChunks();
+	}
+
+	void BuildBuffer()
+	{
+		Constants::GpuBufferVertex* verticies = nullptr;
+		
 	}
 };

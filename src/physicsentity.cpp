@@ -45,8 +45,9 @@ PhysicsEntity::OnCollisionEnter(PhysicsEntity* other)
 
 #include "stdio.h"
 void
-PhysicsEntity::Destroy(bool)
+PhysicsEntity::Kill(bool)
 {
 	dead = true;
+    __debugbreak();
 	printf("WARNING, A PHYSICS ENTITY DOES NOT HAVE Destroy() defined!\n");
 }

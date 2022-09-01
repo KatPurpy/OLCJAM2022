@@ -38,7 +38,6 @@ class AnimalSafeZone : public PhysicsEntity
 		printf("GOT TYPE %i\n", otherBody->type);
 		if(otherBody->type & Constants::PC_ANIMAL)
 		{
-			printf("IT WORKS\n");
 			SaveAnimal((Animal*)otherBody);
 		}
 	}

@@ -9,7 +9,7 @@ namespace Constants
 		unsigned short u, v;	  //	2*2	=	4
 								  //	12	+	4	+	4	=	20
 	};
-
+    inline const int MaxBuildingParts = 1024;
 	using GpuBufferIndex = uint32_t;
 
 	// warning: lifetime during fire creation does not respect this value
@@ -17,7 +17,7 @@ namespace Constants
 	// 141 - color at which the fire is not of fire color
 	// 256 - color table length (yes it's all hardcoded)
 	// 10 - fire lifetime
-	inline float fireSmokeThreshold = /*141.*/ 20. / 256. * fireLifetime;
+	inline float fireSmokeThreshold = /*141.*/ 0.5f * fireLifetime;
 	inline void* particleFireTag = (void*)(0x1);
 	inline void* particleWaterTag = (void*)(0x2);
 	inline void* particleSmokeTag = (void*)(0x3);

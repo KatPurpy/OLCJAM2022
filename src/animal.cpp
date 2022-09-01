@@ -4,6 +4,7 @@ Animal::Animal()
 {
 	type = Constants::PC_ANIMAL;
 	canBeSetOnFire = true;
+    burnData.particleThreshold = 1;
 }
 
 void
@@ -83,7 +84,7 @@ Animal::Draw()
 }
 
 void
-Animal::Destroy(bool silent)
+Animal::Kill(bool silent)
 {
 	dead = true;
 	if(silent)

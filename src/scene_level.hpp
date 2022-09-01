@@ -14,6 +14,7 @@
 #include "gradient_fire.h"
 #include "leveldata.hpp"
 #include "animalsafezone.hpp"
+#include "building_part.hpp"
 
 using namespace BZZRE;
 
@@ -116,6 +117,18 @@ static b2ParticleGroup* pfireGroup;
 static b2ParticleSystem* sSmokeSystem;
 static b2ParticleGroup* pSmokeGroup;
 
+static int GameVar_Animals;
+static int GameVar_AnimalsSaved;
+static int GameVar_BuildingsLeft;
+static int GameVar_BuildingPartCount[Constants::MaxBuildingParts];
+
+
+void RegisterBuildingDestruction()
+{
+    GameVar_BuildingsLeft--;
+    printf("BUILDING GONE\n");
+}
+
 void
 MakeFireParticle(b2Vec2 pos)
 {
@@ -188,7 +201,8 @@ static int NumAnimals;
 void
 SaveAnimal(Animal* animal)
 {
-	animal->Destroy(true);
+    GameVar_AnimalsSaved++;
+	animal->Kill(true);
 }
 
 struct SceneLevel
@@ -265,7 +279,17 @@ struct SceneLevel
 		Camera::screen_margin_y = 0.35f;
 		Camera::speed = 1;
 		Camera::ppm = 10;
-
+        Camera::bounds = {0,128,0,50};
+        //TODO: FIX CAMERA!!!!!!!!
+        //TODO: ADD REAL TERRAIN RENDERING!!!
+        //TODO: WIN CONDITION
+        //TODO: LOSE CONDITION
+        //TODO: ADD SPRITES FOR SUN, CLOUD, ANIMALS
+        //TODO: ADD BUILDINGS
+        //TODO: LEVEL GENERATION
+        //TODO: ADD MAIN MENU
+        //TODO: ADD DAY NIGHT VISUAL CYCLE
+        //TODO: ADD BLOOM
 		PhysicsEntity* e = (new Sun());
 		e->Instantiate(world);
 		((Sun*)e)->SetPosition({ 20, 20 });
@@ -311,6 +335,20 @@ struct SceneLevel
 		asz->Instantiate(world);
 		asz->body->SetTransform({ 128, 0 }, 0);
 
+{
+        BZZRE::Image* img = new BZZRE::Image("logotip.qoi");
+        BuildingPartDef bpdef;
+        bpdef.sprite.color = {255,255,255,255};
+        bpdef.sprite.image = *img->Get();
+        bpdef.size = {5,5};
+        bpdef.transform = b2Transform({20,20}, b2Rot());
+        GameVar_BuildingPartCount[0] = 0;
+        bpdef.buildingCountPtr = &GameVar_BuildingPartCount[0];
+        static BuildingPart* part;
+        part = new BuildingPart(bpdef);
+        part->Instantiate(world);
+        printf("PARTS FOR BUILDING 0 %i\n",GameVar_BuildingPartCount[0]);
+}
 		// PutWater({50,20}, &shape);
 	}
 	static void
@@ -364,7 +402,7 @@ struct SceneLevel
 				index = 0;
 			if(index > fire_gradient_width)
 				index = fire_gradient_width - 1;
-			colors[i] = fireColorGradient[index];
+            colors[i] = fireColorGradient[index];
 		}
 	}
 

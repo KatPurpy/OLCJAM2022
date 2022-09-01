@@ -6,7 +6,7 @@ Unit::Unit() { type = Constants::PC_PLAYERUNIT; }
 Unit::~Unit()
 {
 	if(!destroyed)
-		Destroy(true);
+		Kill(true);
 }
 
 void
