@@ -42,7 +42,7 @@ class BuildingPart : public PhysicsEntity
             fdef.shape = &shape; 
             fdef.filter.categoryBits = Constants::PC_BUILDING;
             fdef.filter.maskBits = Constants::BUILDING_COLLIDESSWITH;
-            fdef.density = 200;
+            fdef.density = 100;
             b2BodyDef bdef;
             bdef.position = transform.p;
             bdef.angle = transform.q.GetAngle();

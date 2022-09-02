@@ -79,7 +79,7 @@ draw()
 
 int
 main()
-{
+{srand(time(NULL)); // Initialization, should only be called once.
 	BZZRE::Base::initargs args{ 0 };
 	args.windowtitle = "TOP SECRET";
 	args.windowWidth = 600;

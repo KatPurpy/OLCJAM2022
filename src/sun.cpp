@@ -15,10 +15,6 @@ Sun::Draw()
 {
 }
 
-void
-Sun::Destroy(bool silent)
-{
-}
 void WaterToSmoke(b2Vec2 pos, float radius);
 void
 Sun::Ability()

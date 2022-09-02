@@ -101,5 +101,5 @@ class PhysicsEntity
 	virtual void OnCollisionEnter(PhysicsEntity* otherBody);
 	virtual void OnParticleColisionEnter(b2ParticleSystem* particleSystem, b2ParticleBodyContact* particleBodyContact);
 	virtual void Kill(bool silent);
-	~PhysicsEntity();
+	virtual ~PhysicsEntity();
 };

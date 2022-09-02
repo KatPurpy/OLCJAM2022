@@ -5,6 +5,7 @@ Unit::Unit() { type = Constants::PC_PLAYERUNIT; }
 
 Unit::~Unit()
 {
+	printf("DEL UNIT\n");
 	if(!destroyed)
 		Kill(true);
 }

@@ -50,6 +50,14 @@ class Terrain
 	float m_num_chunks;
 	int m_verts_per_chunk;
 
+	~Terrain()
+	{
+		arrfree(m_heightmap);
+		arrfree(m_heigthmap_colors);
+		arrfree(m_chunk_is_dirty);
+		arrfree(chunkBodies);
+	}
+
 	float
 	GetDistance(int vertex)
 	{

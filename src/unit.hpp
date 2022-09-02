@@ -17,7 +17,7 @@ class Unit : public PhysicsEntity
 
   public:
 	Unit();
-	~Unit();
+	virtual ~Unit();
 	b2Vec2 targetpos;
 	void Follow();
 	void SetPosition(b2Vec2 vec);

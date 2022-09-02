@@ -1,6 +1,10 @@
 #include "physicsentity.hpp"
-
-PhysicsEntity::~PhysicsEntity() { body->GetWorld()->DestroyBody(body); }
+#include "stdio.h"
+PhysicsEntity::~PhysicsEntity() 
+{ 
+    printf("DESTROY ENT\n");
+    body->GetWorld()->DestroyBody(body); 
+}
 
 void
 PhysicsEntity::Update()
@@ -48,6 +52,6 @@ void
 PhysicsEntity::Kill(bool)
 {
 	dead = true;
-    __debugbreak();
+    //__debugbreak();
 	printf("WARNING, A PHYSICS ENTITY DOES NOT HAVE Destroy() defined!\n");
 }

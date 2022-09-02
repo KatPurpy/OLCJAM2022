@@ -122,6 +122,23 @@ static int GameVar_AnimalsSaved;
 static int GameVar_BuildingsLeft;
 static int GameVar_BuildingPartCount[Constants::MaxBuildingParts];
 
+static b2ParticleColor fireColorGradient[fire_gradient_width];
+
+BZZRE::Image img("logotip.qoi");
+void UpdateFireColor()
+{
+	auto colors = sfireSystem->GetColorBuffer();
+	for(int i = 0; i < sfireSystem->GetParticleCount(); i++)
+	{
+		float time = sfireSystem->GetParticleLifetime(i);
+		int index = time / Constants::fireLifetime * (float)fire_gradient_width;
+		if(index < 0)
+			index = 0;
+		if(index > fire_gradient_width)
+			index = fire_gradient_width - 1;
+		colors[i] = fireColorGradient[index];
+	}
+}
 
 void RegisterBuildingDestruction()
 {
@@ -152,8 +169,24 @@ MakeFireParticle(b2Vec2 pos)
 static void
 AllocateWorld(bool allocate)
 {
-	allocThing(Terrain, terrain);
+	if(!allocate)
+	{
+		b2Body* node = world->GetBodyList();
+		while(node)
+		{
+			b2Body* b = node;
+			node = node->GetNext();
+			PhysicsEntity* myActor = (PhysicsEntity*)b->GetUserData();
+			if(myActor)
+			{
+				delete myActor;
+			}
+		}
+	}
 	allocThing(b2World, world, { 0, -10 });
+	
+	allocThing(Terrain, terrain);
+
 }
 #undef allocThing
 
@@ -205,10 +238,10 @@ SaveAnimal(Animal* animal)
 	animal->Kill(true);
 }
 
+static float RebootTime;
+
 struct SceneLevel
 {
-	static inline b2ParticleColor fireColorGradient[fire_gradient_width];
-
 	static void
 	IterateEntities(void (*iterate)(PhysicsEntity*))
 	{
@@ -280,28 +313,28 @@ struct SceneLevel
 		Camera::speed = 1;
 		Camera::ppm = 10;
         Camera::bounds = {0,128,0,50};
-        //TODO: FIX CAMERA!!!!!!!!
         //TODO: ADD REAL TERRAIN RENDERING!!!
         //TODO: WIN CONDITION
         //TODO: LOSE CONDITION
         //TODO: ADD SPRITES FOR SUN, CLOUD, ANIMALS
-        //TODO: ADD BUILDINGS
         //TODO: LEVEL GENERATION
         //TODO: ADD MAIN MENU
         //TODO: ADD DAY NIGHT VISUAL CYCLE
         //TODO: ADD BLOOM
-		PhysicsEntity* e = (new Sun());
+		
+		/*PhysicsEntity* e = (new Sun());
 		e->Instantiate(world);
 		((Sun*)e)->SetPosition({ 20, 20 });
-
-		/*cloud.Instantiate(world);*/
-		terrain = new Terrain();
-		terrain->Initialize(world, 0, 0, 100, 128, 128, 32);
-		terrain->Generate(world, [](int, float x) { return (float)(((int)(x / 32)) * 1); });
-
 		e = new Animal();
 		e->Instantiate(world);
 		e->body->SetTransform({ 60, 10 }, 0);
+*/
+
+		/*cloud.Instantiate(world);*/
+		/*terrain = new Terrain();
+		terrain->Initialize(world, 0, 0, 100, 128, 128, 32);
+		terrain->Generate(world, [](int, float x) { return (float)(((int)(x / 32)) * 1); });
+*/
 
 		b2ParticleSystemDef psystemdef;
 		psystemdef.radius = 0.75f;
@@ -325,21 +358,21 @@ struct SceneLevel
 		b2CircleShape shape;
 		shape.m_radius = 5;
 
-		srand(time(NULL)); // Initialization, should only be called once.
+		
 
-		auto asz = new AnimalSafeZone();
+		/*auto asz = new AnimalSafeZone();
 		asz->Instantiate(world);
 		asz->body->SetTransform({ 0, 0 }, 0);
 
 		asz = new AnimalSafeZone();
 		asz->Instantiate(world);
 		asz->body->SetTransform({ 128, 0 }, 0);
+*/
+/*{
 
-{
-        BZZRE::Image* img = new BZZRE::Image("logotip.qoi");
         BuildingPartDef bpdef;
         bpdef.sprite.color = {255,255,255,255};
-        bpdef.sprite.image = *img->Get();
+        bpdef.sprite.image = *img.Get();
         bpdef.size = {5,5};
         bpdef.transform = b2Transform({20,20}, b2Rot());
         GameVar_BuildingPartCount[0] = 0;
@@ -348,7 +381,7 @@ struct SceneLevel
         part = new BuildingPart(bpdef);
         part->Instantiate(world);
         printf("PARTS FOR BUILDING 0 %i\n",GameVar_BuildingPartCount[0]);
-}
+}*/
 		// PutWater({50,20}, &shape);
 	}
 	static void
@@ -377,33 +410,14 @@ struct SceneLevel
 	static void
 	Update()
 	{
-		world->Step(1.f / 60.0f, 6, 2, 1);
-		if(Input::MouseDown(SAPP_MOUSEBUTTON_RIGHT))
-		{
-			float mx, my;
-			Input::MousePos(&mx, &my);
-			MakeFireParticle(Camera::ScreenToBox2D({ mx, my }));
-		}
-		if(Input::MouseClick(SAPP_MOUSEBUTTON_MIDDLE))
-		{
-			float mx, my;
-			Input::MousePos(&mx, &my);
-			float aaa = Camera::ScreenToBox2D({ mx, my }).x;
-			PutPit(aaa, 20, 10, true);
-		}
-		IterateEntities([](auto pe) { pe->Update(); });
 
-		auto colors = sfireSystem->GetColorBuffer();
-		for(int i = 0; i < sfireSystem->GetParticleCount(); i++)
+		if(Input::IsKeyDown(SAPP_KEYCODE_R))
 		{
-			float time = sfireSystem->GetParticleLifetime(i);
-			int index = time / Constants::fireLifetime * (float)fire_gradient_width;
-			if(index < 0)
-				index = 0;
-			if(index > fire_gradient_width)
-				index = fire_gradient_width - 1;
-            colors[i] = fireColorGradient[index];
+			StateManagement::SwitchState<SceneLevel>();
 		}
+		world->Step(1.f / 60.0f, 6, 2, 1);
+		IterateEntities([](auto pe) { pe->Update(); });
+		UpdateFireColor();
 	}
 
 	static void

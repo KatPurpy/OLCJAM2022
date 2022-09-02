@@ -24,14 +24,7 @@ class AnimalSafeZone : public PhysicsEntity
 		body->CreateFixture(&fdef);
 		return body;
 	}
-	void
-	Update()
-	{
-	}
-	void
-	Draw()
-	{
-	}
+	void Draw(){}
 	void
 	OnCollisionEnter(PhysicsEntity* otherBody)
 	{
