@@ -1,5 +1,6 @@
 #pragma once
 #include "physicsentity.hpp"
+#include "BZZRE/resources/image.hpp"
 
 template <typename T>
 int
@@ -16,6 +17,7 @@ class Animal : public PhysicsEntity
 	float speed;
 	float jumptimer{};
 	void Jump();
+	sg_image image;
 
   public:
 	Animal();

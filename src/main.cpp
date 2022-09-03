@@ -9,6 +9,13 @@
 #include "camera.hpp"
 #include "statemanagement.hpp"
 #include "scene_level.hpp"
+#include "scene_mainemenu.hpp"
+
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+
+
 using namespace BZZRE;
 using GameSpriteDrawList = Graphics::SpriteDrawList<Constants::GpuBufferVertex, Constants::GpuBufferIndex>;
 
@@ -48,7 +55,7 @@ init()
 
 	sheet = (new BZZRE::SpriteSheet("assets/test.txt"))->Get();
 
-	StateManagement::SwitchState<SceneLevel>();
+	StateManagement::SwitchState<SceneMainMenu>();
 }
 
 void
@@ -77,15 +84,21 @@ draw()
 	sg_end_pass();
 }
 
+void cleanup()
+{
+
+}
+
 int
 main()
 {srand(time(NULL)); // Initialization, should only be called once.
 	BZZRE::Base::initargs args{ 0 };
 	args.windowtitle = "TOP SECRET";
-	args.windowWidth = 600;
-	args.windowHeight = 480;
+	args.windowWidth = 1280;
+	args.windowHeight = 720;
 	args.init = init;
 	args.update = update;
 	args.draw = draw;
+	args.cleanup = cleanup;
 	BZZRE::Base::Run(args);
 }

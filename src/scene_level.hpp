@@ -15,6 +15,7 @@
 #include "leveldata.hpp"
 #include "animalsafezone.hpp"
 #include "building_part.hpp"
+#include "stdlib.h"
 
 using namespace BZZRE;
 
@@ -35,7 +36,6 @@ class _contactListener : public b2ContactListener
 
 			if(userDataA && userDataB && !isParticle(userDataA) && !isParticle(userDataB))
 			{
-				printf("%p %p\n", userDataA, userDataB);
 				userDataA->OnCollisionEnter(userDataB);
 				userDataB->OnCollisionEnter(userDataA);
 			}
@@ -117,11 +117,15 @@ static b2ParticleGroup* pfireGroup;
 static b2ParticleSystem* sSmokeSystem;
 static b2ParticleGroup* pSmokeGroup;
 
-static int GameVar_Animals;
-static int GameVar_AnimalsSaved;
-static int GameVar_BuildingsLeft;
-static int GameVar_BuildingPartCount[Constants::MaxBuildingParts];
-
+static struct 
+{
+	int Animals;
+	int AnimalsDied;
+	int AnimalsSaved;
+	int BuildingsLeft;
+	int BuildingPartCount[512];
+	int NumAnimals;
+} GameVar;
 static b2ParticleColor fireColorGradient[fire_gradient_width];
 
 BZZRE::Image img("logotip.qoi");
@@ -142,8 +146,15 @@ void UpdateFireColor()
 
 void RegisterBuildingDestruction()
 {
-    GameVar_BuildingsLeft--;
+    GameVar.BuildingsLeft--;
     printf("BUILDING GONE\n");
+}
+
+void KillAnimal(Animal* animal)
+{
+	GameVar.AnimalsDied++;
+	animal->Kill(true);
+	//TODO: PLAY DEATH SOUND
 }
 
 void
@@ -162,10 +173,8 @@ MakeFireParticle(b2Vec2 pos)
 }
 
 #define allocThing(type, name, ...)                                                                                    \
-	if(allocate)                                                                                                       \
-		name = new type(__VA_ARGS__);                                                                                  \
-	else                                                                                                               \
-		delete name;
+		if(allocate){name = new type(__VA_ARGS__);}else {delete name;}
+
 static void
 AllocateWorld(bool allocate)
 {
@@ -184,7 +193,14 @@ AllocateWorld(bool allocate)
 		}
 	}
 	allocThing(b2World, world, { 0, -10 });
-	
+	if(allocate)
+	{
+		world->SetDebugDraw(&debugDraw);
+		world->SetContactFilter(&particleFilter);
+		world->SetContactListener(&contactListener);
+
+		debugDraw.SetFlags(b2Draw::e_shapeBit | b2Draw::e_particleBit);
+	}
 	allocThing(Terrain, terrain);
 
 }
@@ -205,6 +221,29 @@ PutWater(b2Vec2 position, b2Shape* shape, float stride = 0)
 		= b2ParticleFlag::b2_fixtureContactListenerParticle | b2ParticleFlag::b2_fixtureContactFilterParticle;
 	sWaterSystem->CreateParticleGroup(pgroupdef);
 }
+
+ 	void PutPit(float x, float width, float depth, bool water)
+	{
+		static float start_x;
+		static float pit_length;
+		static int pit_width_verts;
+		static float pit_depth;
+		start_x = x;
+		pit_length = terrain->GetDistance(width);
+		pit_width_verts = terrain->GetVertsForDistance(pit_length);
+		pit_depth = depth;
+
+		auto func = [](int i, float f) -> float { return sin(((f) / pit_length) * M_PI) * -pit_depth; };
+		terrain->WriteHeightmapProceduralOffset(func, pit_width_verts, start_x - pit_length / 2);
+
+		if(water)
+		{
+			b2CircleShape shape;
+			shape.m_radius = pit_depth / 2;
+			PutWater({ start_x, terrain->GetHeightAt(start_x) + shape.m_radius * 1.25f }, &shape);
+		}
+
+	}
 
 void
 WaterToSmoke(b2Vec2 pos, float radius)
@@ -230,18 +269,152 @@ WaterToSmoke(b2Vec2 pos, float radius)
 	}
 }
 
-static int NumAnimals;
+
 void
 SaveAnimal(Animal* animal)
 {
-    GameVar_AnimalsSaved++;
+    GameVar.AnimalsSaved++;
 	animal->Kill(true);
 }
 
 static float RebootTime;
+static int current_BuildingID = 0;
+static b2Vec2 current_Building_offset;
+#define COMMAND_BEGIN(cmdname, argc) if (strcmp(cmdname,command) == 0) { if(argc != arrlen(args)) { printf("COMMAND \"%s\" ON LINE %i. EXPECTED %i. GOT %i.\n",command,linenum, argc, arrlen(args)); abort(); }
+#define COMMAND_END() return; }
+static void InterpretComand(const char* command, float* args, int linenum)
+{
+
+	COMMAND_BEGIN("terrain", 5)
+		float length = args[0];
+		float depth = args[1];
+		int verts = args[2];
+		int verts_per_chunk = args[3];	
+		int seed = args[4];
+		
+		terrain = new Terrain();
+		terrain->Initialize(world, 0, 0, length, depth, verts, verts_per_chunk);
+
+		terrain->Generate(world, [](int, float x) { return (float)(((int)(x / 32)) * 1); });
+		
+		auto asz = new AnimalSafeZone();
+		asz->Instantiate(world);
+		asz->body->SetTransform({ 0, 0 }, 0);
+
+		asz = new AnimalSafeZone();
+		asz->Instantiate(world);
+		asz->body->SetTransform({ length, 0 }, 0);
+		
+
+		Camera::screen_margin_x = 0.35f;
+		Camera::screen_margin_y = 0.35f;
+		Camera::speed = 1;
+		Camera::ppm = 10;
+        Camera::bounds = {0,length,-depth,50};
+	COMMAND_END()
+
+	COMMAND_BEGIN("pit", 4)
+		float x = args[0];
+		float width = args[1];
+		float depth = args[2];
+		float b = args[3];
+		PutPit(x,width,depth,b);
+	COMMAND_END()
+
+	COMMAND_BEGIN("regen", 0)
+		terrain->RegenerateChunks();
+	COMMAND_END()
+
+	COMMAND_BEGIN("b_begin", 1)
+	current_BuildingID = GameVar.BuildingsLeft;
+	GameVar.BuildingsLeft++;
+	float x = args[0];
+	current_Building_offset = { x, terrain->GetHeightAt(x) + 1 };
+	COMMAND_END()
+
+	COMMAND_BEGIN("b_part", 6)
+		assert(current_BuildingID != -1);
+		int sprite = args[0];
+		float x = args[1];
+		float y = args[2];
+		float w = args[3];
+		float h = args[4];
+		float r = args[5];
+
+		BuildingPartDef def;
+		def.sprite.image = *img.Get();
+		def.buildingCountPtr = &GameVar.BuildingPartCount[current_BuildingID];
+		def.size = {w,h};
+		def.sprite.color = {255,255,255,255};
+		def.transform.Set(b2Vec2(x,y) + current_Building_offset,r);
+
+		BuildingPart* part = new BuildingPart(def);
+		part->Instantiate(world);
+	COMMAND_END()
+
+	COMMAND_BEGIN("b_end", 0)
+	current_BuildingID = -1;
+	COMMAND_END()
+
+	COMMAND_BEGIN("animal", 1)
+		GameVar.Animals++;
+		float x = args[0];
+		auto e = new Animal();
+		e->Instantiate(world);
+		b2Vec2 pos = { x, terrain->GetHeightAt(x) + 1 };
+		e->body->SetTransform(pos, 0);
+	COMMAND_END()
+	
+	COMMAND_BEGIN("sun", 2)
+		Sun* e = (new Sun());
+		e->Instantiate(world);
+		e->SetPosition({ args[0], args[1] });
+		e->targetpos = {args[0], args[1]};
+		Camera::x = args[0];
+		Camera::y = args[1];
+	COMMAND_END()
+}
+
+void ParseCommand(const char* line, int linenum, int* terminate)
+{
+	char* command = nullptr;
+	char* currptr = (char*)(void*)line;
+	float* args = nullptr;
+
+
+	while (!isspace(*currptr))
+	{
+		arrpush(command, *currptr);
+		currptr++;
+	}
+	arrpush(command, 0);
+	bool terminateReadArgs = 0;
+	while(*currptr)
+	{
+		while(*currptr && !isdigit(*currptr)) currptr++;
+		if(*currptr) arrpush(args, (float)atof(currptr));
+		while(*currptr && !isspace(*currptr)) currptr++;
+	}
+
+	assert(*currptr == 0);	
+
+	printf("%s", command);
+	for(int i = 0; i < arrlen(args); i++)
+	{
+		printf(" %f", args[i]);
+	}
+	printf("\n");
+	if(strcmp("end", command) == 0) *terminate = true;
+	else InterpretComand(command, args, linenum);
+	
+	arrfree(command);
+	arrfree(args);
+}
 
 struct SceneLevel
 {
+	static inline const char* LevelPath = NULL;
+	static inline bool LevelEditor = false;
 	static void
 	IterateEntities(void (*iterate)(PhysicsEntity*))
 	{
@@ -278,64 +451,9 @@ struct SceneLevel
             }
         }
 	}
-
-	static void
-	Enter()
+	
+	static void CreateParticleSystems()
 	{
-		AllocateWorld(true);
-
-		{
-			char* data = fire_gradient_data;
-			for(int i = 0; i < fire_gradient_width; i++)
-			{
-				uint8_t pixel[3];
-				HEADER_PIXEL(data, pixel);
-				int index = fire_gradient_width - i - 1;
-				assert(index >= 0);
-				fireColorGradient[index] = b2ParticleColor(pixel[0], pixel[1], pixel[2], (index >> 2) << 2);
-			}
-		}
-		// Define the gravity vector.
-		b2Vec2 gravity(0.0f, -10.0f);
-
-		// Construct a world object, which will hold and simulate the rigid bodies.
-		world = new b2World(gravity);
-		world->SetDebugDraw(&debugDraw);
-		world->SetContactFilter(&particleFilter);
-		world->SetContactListener(&contactListener);
-
-		debugDraw.SetFlags(b2Draw::e_shapeBit | b2Draw::e_particleBit);
-
-		Camera::x = 0;
-		Camera::y = 0;
-		Camera::screen_margin_x = 0.35f;
-		Camera::screen_margin_y = 0.35f;
-		Camera::speed = 1;
-		Camera::ppm = 10;
-        Camera::bounds = {0,128,0,50};
-        //TODO: ADD REAL TERRAIN RENDERING!!!
-        //TODO: WIN CONDITION
-        //TODO: LOSE CONDITION
-        //TODO: ADD SPRITES FOR SUN, CLOUD, ANIMALS
-        //TODO: LEVEL GENERATION
-        //TODO: ADD MAIN MENU
-        //TODO: ADD DAY NIGHT VISUAL CYCLE
-        //TODO: ADD BLOOM
-		
-		/*PhysicsEntity* e = (new Sun());
-		e->Instantiate(world);
-		((Sun*)e)->SetPosition({ 20, 20 });
-		e = new Animal();
-		e->Instantiate(world);
-		e->body->SetTransform({ 60, 10 }, 0);
-*/
-
-		/*cloud.Instantiate(world);*/
-		/*terrain = new Terrain();
-		terrain->Initialize(world, 0, 0, 100, 128, 128, 32);
-		terrain->Generate(world, [](int, float x) { return (float)(((int)(x / 32)) * 1); });
-*/
-
 		b2ParticleSystemDef psystemdef;
 		psystemdef.radius = 0.75f;
 		sWaterSystem = world->CreateParticleSystem(&psystemdef);
@@ -355,79 +473,134 @@ struct SceneLevel
 		pfireGroup = sfireSystem->CreateParticleGroup(groupdef);
 
 		pSmokeGroup = sSmokeSystem->CreateParticleGroup(groupdef);
-		b2CircleShape shape;
-		shape.m_radius = 5;
+	}
 
+	static void LoadFireGradient()
+	{
+		char* data = fire_gradient_data;
+		for(int i = 0; i < fire_gradient_width; i++)
+		{
+			uint8_t pixel[3];
+			HEADER_PIXEL(data, pixel);
+			int index = fire_gradient_width - i - 1;
+			assert(index >= 0);
+			fireColorGradient[index] = b2ParticleColor(pixel[0], pixel[1], pixel[2], (index >> 2) << 2);
+		}
+	}
+
+	static void
+	Enter()
+	{
+		memset(&GameVar, 0, sizeof(GameVar));
+		AllocateWorld(true);
+		CreateParticleSystems();
+		LoadFireGradient();
+		// PutWater({50,20}, &shape);
 		
 
-		/*auto asz = new AnimalSafeZone();
-		asz->Instantiate(world);
-		asz->body->SetTransform({ 0, 0 }, 0);
+{
+		memset(LEVELDATA, 0, sizeof(LEVELDATA));
+		FILE* filePointer = fopen(LevelPath, "r");;
+		fseek(filePointer, 0, SEEK_END);
+		long fsize = ftell(filePointer);
+		rewind(filePointer);
+		fread(LEVELDATA, fsize, 1, filePointer);
+		rewind(filePointer);		
 
-		asz = new AnimalSafeZone();
-		asz->Instantiate(world);
-		asz->body->SetTransform({ 128, 0 }, 0);
-*/
-/*{
+		int bufferLength = 255;
+		char buffer[bufferLength]; /* not ISO 90 compatible */
+		int linenum = 0;
 
-        BuildingPartDef bpdef;
-        bpdef.sprite.color = {255,255,255,255};
-        bpdef.sprite.image = *img.Get();
-        bpdef.size = {5,5};
-        bpdef.transform = b2Transform({20,20}, b2Rot());
-        GameVar_BuildingPartCount[0] = 0;
-        bpdef.buildingCountPtr = &GameVar_BuildingPartCount[0];
-        static BuildingPart* part;
-        part = new BuildingPart(bpdef);
-        part->Instantiate(world);
-        printf("PARTS FOR BUILDING 0 %i\n",GameVar_BuildingPartCount[0]);
-}*/
-		// PutWater({50,20}, &shape);
-	}
-	static void
-	PutPit(float x, float width, float depth, bool water)
-	{
-		static float start_x;
-		static float pit_length;
-		static int pit_width_verts;
-		static float pit_depth;
-		start_x = x;
-		pit_length = terrain->GetDistance(width);
-		pit_width_verts = terrain->GetVertsForDistance(pit_length);
-		pit_depth = depth;
-
-		auto func = [](int i, float f) -> float { return sin(((f) / pit_length) * M_PI) * -pit_depth; };
-		terrain->WriteHeightmapProceduralOffset(func, pit_width_verts, start_x - pit_length / 2);
-
-		if(water)
-		{
-			b2CircleShape shape;
-			shape.m_radius = pit_depth / 2;
-			PutWater({ start_x, terrain->GetHeightAt(start_x) + shape.m_radius * 1.25f }, &shape);
+		while(fgets(buffer, bufferLength, filePointer)) {
+			auto castedbuf = (const char*)((void*)buffer);
+			linenum++;
+			int terminate = 0;
+			ParseCommand(castedbuf, linenum, &terminate);
+			if(terminate)
+			{
+				break;
+			}
 		}
-		terrain->RegenerateChunks();
+
+
+		fclose(filePointer);
+}
+        //TODO: ADD REAL TERRAIN RENDERING!!!
+        //TODO: WIN CONDITION
+        //TODO: LOSE CONDITION
+        //TODO: ADD SPRITES FOR SUN, CLOUD, ANIMALS
+        //TODO: LEVEL GENERATION
+        //TODO: ADD MAIN MENU
+        //TODO: ADD DAY NIGHT VISUAL CYCLE
+        //TODO: ADD BLOOM
+
+		/*PhysicsEntity* e = (new Sun());
+		e->Instantiate(world);
+		((Sun*)e)->SetPosition({ 20, 20 });
+
+		e = new Animal();
+		e->Instantiate(world);
+		e->body->SetTransform({ 60, 10 }, 0);
+
+
+		terrain = new Terrain();
+		terrain->Initialize(world, 0, 0, 100, 128, 128, 32);
+		terrain->Generate(world, [](int, float x) { return (float)(((int)(x / 32)) * 1); });
+		*/
 	}
+static inline char LEVELDATA[1<<16];
+	
 	static void
 	Update()
 	{
-
-		if(Input::IsKeyDown(SAPP_KEYCODE_R))
-		{
-			StateManagement::SwitchState<SceneLevel>();
-		}
 		world->Step(1.f / 60.0f, 6, 2, 1);
 		IterateEntities([](auto pe) { pe->Update(); });
 		UpdateFireColor();
+		
+		if(LevelEditor)
+		{
+			ImGui::Begin("EDITOR");
+			if(ImGui::Button("Reload"))
+			{
+				StateManagement::SwitchState<SceneLevel>();
+				auto fp = fopen(LevelPath, "w");
+				fputs(LEVELDATA, fp);
+				fclose(fp);
+			} else {
+				ImGui::InputTextMultiline("LEVEL DATA", LEVELDATA, sizeof(LEVELDATA), {400,400});
+			}
+			ImGui::End();
+		}
 	}
-
+	static inline int aaaaaa = 0;
 	static void
 	Draw()
 	{
 		float mx, my;
 		Input::MousePos(&mx, &my);
-		Camera::MouseMovement(mx / sapp_widthf(), my / sapp_heightf(), Input::MouseScroll());
-		IterateEntities([](auto pe) { pe->Draw(); });
+		if(!ImGui::GetIO().WantCaptureMouse)
+			Camera::MouseMovement(mx / sapp_widthf(), my / sapp_heightf(), Input::MouseScroll());
 		world->DrawDebugData();
+		IterateEntities([](auto pe) { pe->Draw(); });
+		
+		const char* buildingsLeftFmt = "Buildings left: %i";
+		const char* animalsSaved = "Deers killed: %i/%i. (Got away: %i)";
+		char tmpstr[1024];
+		
+
+		auto a = ImGui::GetFont();
+		a->Scale = 1.5f;
+	
+		auto list = ImGui::GetForegroundDrawList();
+		
+		ImGui::PushFont(a);
+		int num = sprintf_s(tmpstr, sizeof(tmpstr), buildingsLeftFmt, GameVar.BuildingsLeft);
+		list->AddText({0,0}, 0xFF00FF00, tmpstr, tmpstr+num);
+
+		num = sprintf_s(tmpstr, sizeof(tmpstr), animalsSaved, GameVar.AnimalsDied, GameVar.Animals, GameVar.AnimalsSaved);
+		list->AddText({0,14 * 1.5f}, 0xFF00FF00, tmpstr, tmpstr+num);
+		ImGui::PopFont();
+		a->Scale = 1;
 	}
 
 	static void

@@ -79,7 +79,7 @@ class Terrain
 	}
 
 	void
-	Initialize(b2World* world, float start_x, float start_y, float max_depth, float length, int num_verts,
+	Initialize(b2World* world, float start_x, float start_y, float length, float max_depth, int num_verts,
 			   int verts_per_chunk)
 	{
 		assert(max_depth > 0);
@@ -222,7 +222,15 @@ class Terrain
 		WriteHeightmapProcedural(heightFunc, arrlen(m_heightmap), m_offset.X);
 		RegenerateChunks();
 	}
+	void Draw()
+	{
+		b2Vec2* points = NULL;
 
+		for(int i = 0; i < arrlen(m_heightmap); i++)
+		{
+			
+		}
+	}
 	void BuildBuffer()
 	{
 		Constants::GpuBufferVertex* verticies = nullptr;

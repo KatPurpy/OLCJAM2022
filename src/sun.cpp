@@ -2,23 +2,16 @@
 #include "stdio.h"
 #include "cloud.hpp"
 #include "overlapcheck.hpp"
+#include "camera.hpp"
+#include "BZZRE/resources/image.hpp"
+#include "imgui.h"
 Sun::Sun() { m_maxspeed = 20; }
 
 void
 Sun::Update()
 {
 	BaseUnitUpdate();
-}
 
-void
-Sun::Draw()
-{
-}
-
-void WaterToSmoke(b2Vec2 pos, float radius);
-void
-Sun::Ability()
-{
 	if(cloudMaterial >= cloudCost)
 	{
 		cloudMaterial -= cloudCost;
@@ -28,7 +21,44 @@ Sun::Ability()
 		c->targetpos = body->GetPosition();
 		c->targetpos += { 0, 10 };
 	}
-	else
+}
+
+BZZRE::Image base("sun_base.qoi");
+BZZRE::Image face("sun_face.qoi");
+
+static sg_image* base_img = NULL;
+static sg_image* face_img = NULL;
+int time = 0;
+void
+Sun::Draw()
+{
+	if(!base_img) base_img = base.Get();
+	if(!face_img) face_img = face.Get();
+
+	BZZRE::Graphics::SpriteDrawParams sdp;
+	sdp.color = {255,255,255,255};
+	
+	auto pos = Camera::Box2DToScreen(body->GetPosition());
+	sdp.xywh = {pos.X, pos.Y, 6, 6};
+	sdp.xywh.ZW *= Camera::ppm;
+	sdp.origin = {128,128};
+
+	sdp.r = time++ / 90.;
+	sdp.image = *base_img;
+	AddSprite(sdp);
+
+	sdp.r = 0;
+	sdp.image = *face_img;
+	AddSprite(sdp);
+
+
+}
+
+void WaterToSmoke(b2Vec2 pos, float radius);
+void
+Sun::Ability()
+{
+
 	{
         const float radius = 8;
         auto pos = body->GetPosition() - b2Vec2(0, 8);

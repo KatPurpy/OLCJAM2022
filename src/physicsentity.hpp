@@ -30,9 +30,11 @@ class PhysicsEntity
 		inline void
 		SetOnFireImmediate(PhysicsEntity* body)
 		{
+			if(!body->canBeSetOnFire) return;
 			this->body = body;
 			body->type = (Constants::PhysicsCategory)((uint16_t)body->type | (uint16_t)Constants::PC_BURNING);
 			onFire = true;
+			fireHP = 15;
 		}
 
 		inline void
@@ -42,7 +44,6 @@ class PhysicsEntity
                 fireHP--;
                 if(fireHP < 0)
                 {
-                    body->canBeSetOnFire = false;
                     onFire = false;
                 }
             

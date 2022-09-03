@@ -1,0 +1,9 @@
+terrain 78 32 128 32 0
+pit 64 30 20 1
+regen
+sun 20 20
+animal 60
+animal 20
+b_begin 30
+b_part 0 0 20 1 1 0
+b_end

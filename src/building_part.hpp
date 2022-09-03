@@ -73,8 +73,9 @@ class BuildingPart : public PhysicsEntity
         void Kill(bool silent) override
         {
             assert(partCounter);
+            printf("BUILD PART BEFORE: %i\n",*partCounter);
             (*partCounter)--;
-            printf("%i\n",*partCounter);
+            printf("BUILD PART AFTER: %i\n",*partCounter);
             if(!(*partCounter))
             {
                 RegisterBuildingDestruction();

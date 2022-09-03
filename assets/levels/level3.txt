@@ -1,0 +1,129 @@
+terrain 478 82 128 32 0
+pit 64 20 20 1
+pit 230 15 20 1
+regen
+sun 150 40
+animal 470
+animal 460
+animal 450
+animal 430
+animal 420
+animal 410
+animal 400
+animal 390
+animal 380
+animal 370
+animal 360
+animal 350
+animal 340
+animal 330
+animal 320
+animal 300
+animal 290
+animal 280
+animal 270
+animal 260
+animal 255
+animal 220
+animal 210
+animal 200
+animal 170
+animal 160
+animal 150
+animal 140
+animal 130
+animal 120
+animal 110
+animal 100
+animal 30
+b_begin 10
+b_part 0 0 5 2 4 0
+b_end
+b_begin 20
+b_part 0 0 5 2 4 0
+b_end
+b_begin 110
+b_part 0 0 10 2 12 0
+b_end
+b_begin 120
+b_part 0 0 5 2 4 0
+b_end
+b_begin 140
+b_part 0 0 5 2 4 0
+b_end
+b_begin 150
+b_part 0 0 5 2 8 0
+b_end
+b_begin 160
+b_part 0 0 5 2 4 0
+b_end
+b_begin 170
+b_part 0 0 20 2 20 0
+b_end
+b_begin 180
+b_part 0 0 5 2 4 0
+b_end
+b_begin 260
+b_part 0 0 5 2 4 0
+b_end
+b_begin 270
+b_part 0 0 10 2 12 0
+b_end
+b_begin 280
+b_part 0 0 10 2 12 0
+b_end
+b_begin 300
+b_part 0 0 10 2 8 0
+b_end
+b_begin 310
+b_part 0 0 10 2 8 0
+b_end
+b_begin 330
+b_part 0 0 40 2 40 0
+b_end
+b_begin 340
+b_part 0 0 10 2 8 0
+b_end
+b_begin 350
+b_part 0 0 10 2 4 0
+b_end
+b_begin 355
+b_part 0 0 12 2 12 0
+b_end
+b_begin 360
+b_part 0 0 10 2 4 0
+b_end
+b_begin 370
+b_part 0 0 10 2 10 0
+b_end
+b_begin 380
+b_part 0 0 10 2 4 0
+b_end
+b_begin 390
+b_part 0 0 10 2 4 0
+b_end
+b_begin 400
+b_part 0 0 10 2 10 0
+b_end
+b_begin 410
+b_part 0 0 10 2 4 0
+b_end
+b_begin 420
+b_part 0 0 10 2 4 0
+b_end
+b_begin 430
+b_part 0 0 10 2 10 0
+b_end
+b_begin 440
+b_part 0 0 10 2 4 0
+b_end
+b_begin 450
+b_part 0 0 12 2 12 0
+b_end
+b_begin 460
+b_part 0 0 10 2 4 0
+b_end
+b_begin 470
+b_part 0 0 10 2 4 0
+b_end
+end

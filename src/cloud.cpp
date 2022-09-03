@@ -29,7 +29,7 @@ Cloud::Ability()
 	auto pos = body->GetPosition();
 
 	OverlapCheck<Animal*, Constants::PC_ANIMAL, false> queue;
-	Animal** animals = queue.OverlapCircle(body->GetWorld(), pos, 25);
+	Animal** animals = queue.OverlapCircle(body->GetWorld(), pos, 45);
 	for(int i = 0; i < arrlen(animals); i++)
 	{
 		animals[i]->GetScared(pos.x);

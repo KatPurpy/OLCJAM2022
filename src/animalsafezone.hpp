@@ -5,6 +5,12 @@ void SaveAnimal(Animal*);
 
 class AnimalSafeZone : public PhysicsEntity
 {
+	public:
+	AnimalSafeZone()
+	{
+		canBeSetOnFire = false;
+	}
+	private:
 	b2Body*
 	CreateBody(b2World* world)
 	{
