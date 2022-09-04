@@ -7,11 +7,13 @@
 #include "imgui.h"
 Sun::Sun() { m_maxspeed = 20; }
 
+void WaterToSmoke(b2Vec2 pos, float radius);
+
 void
 Sun::Update()
 {
 	BaseUnitUpdate();
-
+	Unit::current = this;
 	if(cloudMaterial >= cloudCost)
 	{
 		cloudMaterial -= cloudCost;
@@ -21,6 +23,19 @@ Sun::Update()
 		c->targetpos = body->GetPosition();
 		c->targetpos += { 0, 10 };
 	}
+
+		const float radius = 4;
+        auto pos = body->GetPosition();
+		//WaterToSmoke(pos, radius);
+        b2CircleShape shape;
+	    shape.m_radius = radius;
+	    
+        OverlapCheck<PhysicsEntity*, (Constants::PhysicsCategory)UINT16_MAX, false> check;
+        auto ret = check.OverlapCircle(body->GetWorld(), pos, radius);
+        for(int i = 0; i < arrlen(ret); i++)
+        {
+            ret[i]->burnData.SetOnFireImmediate(ret[i]);
+        }
 }
 
 BZZRE::Image base("sun_base.qoi");
@@ -54,24 +69,13 @@ Sun::Draw()
 
 }
 
-void WaterToSmoke(b2Vec2 pos, float radius);
+
 void
 Sun::Ability()
 {
 
 	{
-        const float radius = 8;
-        auto pos = body->GetPosition() - b2Vec2(0, 8);
-		WaterToSmoke(pos, radius);
-        b2CircleShape shape;
-	    shape.m_radius = radius;
-	    
-        OverlapCheck<PhysicsEntity*, (Constants::PhysicsCategory)UINT16_MAX, false> check;
-        auto ret = check.OverlapCircle(body->GetWorld(), pos, radius);
-        for(int i = 0; i < arrlen(ret); i++)
-        {
-            ret[i]->burnData.SetOnFireImmediate(ret[i]);
-        }
+
 	}
 }
 

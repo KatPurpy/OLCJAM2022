@@ -17,6 +17,10 @@
 #include "building_part.hpp"
 #include "stdlib.h"
 
+#include "BZZRE/subsystems/audio.hpp"
+#include "soloud_wavstream.h"
+#include "scene_win.hpp"
+#include "soloud_wav.h"
 using namespace BZZRE;
 
 class _contactListener : public b2ContactListener
@@ -117,6 +121,8 @@ static b2ParticleGroup* pfireGroup;
 static b2ParticleSystem* sSmokeSystem;
 static b2ParticleGroup* pSmokeGroup;
 
+BZZRE::Image background_sky("sky.jpg");
+
 static struct 
 {
 	int Animals;
@@ -129,8 +135,24 @@ static struct
 static b2ParticleColor fireColorGradient[fire_gradient_width];
 
 BZZRE::Image img("logotip.qoi");
+SoLoud::WavStream screams;
+SoLoud::handle screamHandle = 0; 
+SoLoud::WavStream fireNoise;
+SoLoud::handle fireNoiseHandle = 0; 
 void UpdateFireColor()
 {
+	if(!BZZRE::Audio::GetSoloud()->isValidVoiceHandle(fireNoiseHandle) ||
+	!BZZRE::Audio::GetSoloud()->isValidVoiceHandle(screamHandle))
+	{
+		fireNoise.load("assets/party.ogg");
+		BZZRE::Audio::GetSoloud()->setLooping(fireNoiseHandle = BZZRE::Audio::GetSoloud()->play(fireNoise), true);
+
+		;
+		printf("%s\n", BZZRE::Audio::GetSoloud()->getErrorString(screams.load("assets/happycrowdnoises.ogg")));
+		BZZRE::Audio::GetSoloud()->setLooping(screamHandle = BZZRE::Audio::GetSoloud()->play(screams), true);
+	}
+	BZZRE::Audio::GetSoloud()->setVolume(fireNoiseHandle, sfireSystem->GetParticleCount() / 800. );
+	BZZRE::Audio::GetSoloud()->setVolume(screamHandle, sfireSystem->GetParticleCount() / 800. );
 	auto colors = sfireSystem->GetColorBuffer();
 	for(int i = 0; i < sfireSystem->GetParticleCount(); i++)
 	{
@@ -143,18 +165,23 @@ void UpdateFireColor()
 		colors[i] = fireColorGradient[index];
 	}
 }
-
+static SoLoud::Wav building_explosions[4];
 void RegisterBuildingDestruction()
 {
     GameVar.BuildingsLeft--;
     printf("BUILDING GONE\n");
+	float pitch = rand()/65535. * 0.5f + 0.85f;
+	auto handle = BZZRE::Audio::GetSoloud()->play(building_explosions[rand()%4]);
+	BZZRE::Audio::GetSoloud()->setRelativePlaySpeed(handle,pitch);
 }
-
+static SoLoud::Wav deerDeaths[4];
 void KillAnimal(Animal* animal)
 {
 	GameVar.AnimalsDied++;
+	float pitch = rand()/65535. * 1.5f + 0.85f;
+	auto handle = BZZRE::Audio::GetSoloud()->play(deerDeaths[rand()%4], 0.5f);
+	BZZRE::Audio::GetSoloud()->setRelativePlaySpeed(handle,pitch);
 	animal->Kill(true);
-	//TODO: PLAY DEATH SOUND
 }
 
 void
@@ -265,7 +292,7 @@ WaterToSmoke(b2Vec2 pos, float radius)
 		def.group = pSmokeGroup;
 		def.linearVelocity = { 0, 5 };
 
-		sSmokeSystem->CreateParticleGroup(def);
+		//sSmokeSystem->CreateParticleGroup(def);
 	}
 }
 
@@ -276,6 +303,14 @@ SaveAnimal(Animal* animal)
     GameVar.AnimalsSaved++;
 	animal->Kill(true);
 }
+
+BZZRE::Image BuildingSprites[] =
+{
+	BZZRE::Image("skycrapper.jpg"),
+	BZZRE::Image("propaganda1.jpg"),
+	BZZRE::Image("propaganda2.jpg"),
+	BZZRE::Image("propaganda3.jpg"),
+};
 
 static float RebootTime;
 static int current_BuildingID = 0;
@@ -309,7 +344,7 @@ static void InterpretComand(const char* command, float* args, int linenum)
 		Camera::screen_margin_x = 0.35f;
 		Camera::screen_margin_y = 0.35f;
 		Camera::speed = 1;
-		Camera::ppm = 10;
+		Camera::ppm = 10-4;
         Camera::bounds = {0,length,-depth,50};
 	COMMAND_END()
 
@@ -342,7 +377,7 @@ static void InterpretComand(const char* command, float* args, int linenum)
 		float r = args[5];
 
 		BuildingPartDef def;
-		def.sprite.image = *img.Get();
+		def.sprite.image = *BuildingSprites[sprite].Get();
 		def.buildingCountPtr = &GameVar.BuildingPartCount[current_BuildingID];
 		def.size = {w,h};
 		def.sprite.color = {255,255,255,255};
@@ -410,6 +445,8 @@ void ParseCommand(const char* line, int linenum, int* terminate)
 	arrfree(command);
 	arrfree(args);
 }
+static bool InitStream = false;
+static SoLoud::WavStream music_rampage;
 
 struct SceneLevel
 {
@@ -491,6 +528,23 @@ struct SceneLevel
 	static void
 	Enter()
 	{
+		if(!InitStream)
+		{
+			building_explosions[0].load("assets/boom1.ogg");
+			building_explosions[1].load("assets/boom2.ogg");
+			building_explosions[2].load("assets/boom3.ogg");
+			building_explosions[3].load("assets/boom4.ogg");
+			
+			deerDeaths[0].load("assets/happydeernoise1.ogg");
+			deerDeaths[1].load("assets/happydeernoise2.ogg");
+			deerDeaths[2].load("assets/happydeernoise3.ogg");
+			deerDeaths[3].load("assets/happydeernoise4.ogg");
+			
+			InitStream = true;
+			music_rampage.load("assets/deercost.ogg");
+			auto a =BZZRE::Audio::GetSoloud()->play(music_rampage, 0.75f);
+			BZZRE::Audio::GetSoloud()->setLooping(a, true);
+		}
 		memset(&GameVar, 0, sizeof(GameVar));
 		AllocateWorld(true);
 		CreateParticleSystems();
@@ -549,10 +603,12 @@ struct SceneLevel
 		*/
 	}
 static inline char LEVELDATA[1<<16];
-	
+
 	static void
 	Update()
 	{
+
+
 		world->Step(1.f / 60.0f, 6, 2, 1);
 		IterateEntities([](auto pe) { pe->Update(); });
 		UpdateFireColor();
@@ -570,12 +626,28 @@ static inline char LEVELDATA[1<<16];
 				ImGui::InputTextMultiline("LEVEL DATA", LEVELDATA, sizeof(LEVELDATA), {400,400});
 			}
 			ImGui::End();
+		}else{
+			if(GameVar.Animals == (GameVar.AnimalsDied + GameVar.AnimalsSaved))
+			{
+				StateManagement::SwitchState<SceneWin>();
+			}
 		}
 	}
 	static inline int aaaaaa = 0;
+	static inline sg_image* iii;
 	static void
 	Draw()
 	{
+		if(!iii)
+		{
+			iii = background_sky.Get();
+		}
+		BZZRE::Graphics::SpriteDrawParams sdp;
+        sdp.color = {255,128,64,255};
+        sdp.xywh = {0,0,sapp_widthf(), sapp_heightf()};
+        sdp.image = *iii;
+		AddSprite(sdp);
+
 		float mx, my;
 		Input::MousePos(&mx, &my);
 		if(!ImGui::GetIO().WantCaptureMouse)

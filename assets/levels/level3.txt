@@ -36,6 +36,20 @@ animal 120
 animal 110
 animal 100
 animal 30
+
+b_begin 15
+b_part 1 0 30 20 20 0
+b_end
+b_begin 275
+b_part 2 0 50 15 20 0
+b_end
+b_begin 170
+b_part 3 0 60 15 20 0
+b_end
+b_begin 110
+b_part 3 0 40 20 10 0
+b_end
+
 b_begin 10
 b_part 0 0 5 2 4 0
 b_end

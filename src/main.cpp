@@ -93,7 +93,7 @@ int
 main()
 {srand(time(NULL)); // Initialization, should only be called once.
 	BZZRE::Base::initargs args{ 0 };
-	args.windowtitle = "TOP SECRET";
+	args.windowtitle = "DEER GOD, SUN, NO";
 	args.windowWidth = 1280;
 	args.windowHeight = 720;
 	args.init = init;

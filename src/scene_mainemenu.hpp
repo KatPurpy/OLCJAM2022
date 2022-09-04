@@ -1,5 +1,7 @@
 #include "imgui.h"
-
+BZZRE::Image main_menu_img("mainmenu.jpg");
+static const char* leveled_str = "Level editor";
+static const char* credits = "Credits";
 struct SceneMainMenu
 {
     static void Enter()
@@ -32,24 +34,35 @@ static bool ButtonCenteredOnLine(const char* label, float alignment = 0.5f)
         ImGui::Begin("PAIN", (bool*)nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize );
         if(ButtonCenteredOnLine("Play"))
         {
-            SceneLevel::LevelPath = "devmap.txt";
+            SceneLevel::LevelPath = "assets/levels/level3.txt";
             SceneLevel::LevelEditor = false;
             StateManagement::SwitchState<SceneLevel>();
         }
-        if(ButtonCenteredOnLine("Level editor"))
+        if(ButtonCenteredOnLine(leveled_str))
         {
-            SceneLevel::LevelPath = "devmap.txt";
-            SceneLevel::LevelEditor = true;
-            StateManagement::SwitchState<SceneLevel>();
+            leveled_str = "nope";
+
+//            SceneLevel::LevelPath = "devmap.txt";
+  //        SceneLevel::LevelEditor = "assets/levels/level3.txt";
+    //        StateManagement::SwitchState<SceneLevel>();
         }
-        ButtonCenteredOnLine("Credits");
-        ButtonCenteredOnLine("Exit");
+        if(ButtonCenteredOnLine(credits))
+        {
+            credits = "Can u read?";
+        }
+        if(ButtonCenteredOnLine("Exit"))
+        {
+            sapp_request_quit();
+        }
         ImGui::End();
     }
-
     static void Draw()
     {
-
+        BZZRE::Graphics::SpriteDrawParams sdp;
+        sdp.color = {255,255,255,255};
+        sdp.xywh = {0,0,sapp_widthf(), sapp_heightf()};
+        sdp.image = *main_menu_img.Get();
+        AddSprite(sdp);
     }
 
     static void Leave()

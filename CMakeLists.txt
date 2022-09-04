@@ -21,3 +21,6 @@ add_executable(main ${src})
 target_include_directories(main PRIVATE 3rdparty)
 BZZRIZE(main)
 add_subdirectory(submodules)
+
+configure_file(README.txt README.txt)
+configure_file(LICENSE.txt LICENSE.txt)
