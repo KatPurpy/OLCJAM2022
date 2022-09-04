@@ -17,10 +17,21 @@ endforeach()
 
 
 FILE(GLOB_RECURSE src src/**.cpp src/**.c)
+
+if(EMSCRIPTEN)
+set(CMAKE_EXECUTABLE_SUFFIX .html)
+endif()
 add_executable(main ${src})
+
+if(EMSCRIPTEN)
+target_link_options(main PRIVATE -s TOTAL_MEMORY=128MB --shell-file ${CMAKE_CURRENT_SOURCE_DIR}/shell.html
+        -sEXPORTED_FUNCTIONS=['_main'] --preload-file "${CMAKE_CURRENT_BINARY_DIR}/assets@./assets")
+endif()
+
 target_include_directories(main PRIVATE 3rdparty)
 BZZRIZE(main)
 add_subdirectory(submodules)
 
 configure_file(README.txt README.txt)
 configure_file(LICENSE.txt LICENSE.txt)
+

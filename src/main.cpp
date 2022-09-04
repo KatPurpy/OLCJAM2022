@@ -1,6 +1,5 @@
 #include "stdio.h"
 #include "BZZRE/subsystems/init.hpp"
-#include "BZZRE/resources/spritesheet.hpp"
 #include "BZZRE/subsystems/shaders.hpp"
 #include "BZZRE/subsystems/graphics/spritedrawlist.tcc"
 #include "BZZRE/subsystems/graphics/pipelinebuilder.hpp"
@@ -11,9 +10,7 @@
 #include "scene_level.hpp"
 #include "scene_mainemenu.hpp"
 
-#define _CRTDBG_MAP_ALLOC
-#include <stdlib.h>
-#include <crtdbg.h>
+
 
 
 using namespace BZZRE;
@@ -25,7 +22,6 @@ sg_bindings bind;
 
 SimpleSpriteShader_vs_params_t params;
 BZZRE::Graphics::UniformParams uparams = { { SG_RANGE(params) } };
-BZZRE::SpriteSheet* sheet;
 
 void
 AddSprite(BZZRE::Graphics::SpriteDrawParams& params)
@@ -53,7 +49,7 @@ init()
 
 	spritePipeline = sg_make_pipeline(pipdesc);
 
-	sheet = (new BZZRE::SpriteSheet("assets/test.txt"))->Get();
+	//sheet = (new BZZRE::SpriteSheet("assets/test.txt"))->Get();
 
 	StateManagement::SwitchState<SceneMainMenu>();
 }

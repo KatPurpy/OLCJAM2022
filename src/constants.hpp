@@ -34,7 +34,8 @@ namespace Constants
 		PC_WATER = 1 << 7,
 		PC_CLOUD = 1 << 8,
 		PC_FIRE = 1 << 9,
-		PC_BURNING = 1 << 10
+		PC_BURNING = 1 << 10,
+		PC_ALL = 65535
 	};
 
 	enum COLLIDE

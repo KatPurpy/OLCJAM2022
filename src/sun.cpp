@@ -30,7 +30,7 @@ Sun::Update()
         b2CircleShape shape;
 	    shape.m_radius = radius;
 	    
-        OverlapCheck<PhysicsEntity*, (Constants::PhysicsCategory)UINT16_MAX, false> check;
+        OverlapCheck<PhysicsEntity*, Constants::PhysicsCategory::PC_ALL, false> check;
         auto ret = check.OverlapCircle(body->GetWorld(), pos, radius);
         for(int i = 0; i < arrlen(ret); i++)
         {
@@ -43,7 +43,7 @@ BZZRE::Image face("sun_face.qoi");
 
 static sg_image* base_img = NULL;
 static sg_image* face_img = NULL;
-int time = 0;
+int sun_time = 0;
 void
 Sun::Draw()
 {
@@ -58,7 +58,7 @@ Sun::Draw()
 	sdp.xywh.ZW *= Camera::ppm;
 	sdp.origin = {128,128};
 
-	sdp.r = time++ / 90.;
+	sdp.r = sun_time++ / 90.;
 	sdp.image = *base_img;
 	AddSprite(sdp);
 

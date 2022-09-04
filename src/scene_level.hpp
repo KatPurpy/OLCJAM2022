@@ -141,16 +141,6 @@ SoLoud::WavStream fireNoise;
 SoLoud::handle fireNoiseHandle = 0; 
 void UpdateFireColor()
 {
-	if(!BZZRE::Audio::GetSoloud()->isValidVoiceHandle(fireNoiseHandle) ||
-	!BZZRE::Audio::GetSoloud()->isValidVoiceHandle(screamHandle))
-	{
-		fireNoise.load("assets/party.ogg");
-		BZZRE::Audio::GetSoloud()->setLooping(fireNoiseHandle = BZZRE::Audio::GetSoloud()->play(fireNoise), true);
-
-		;
-		printf("%s\n", BZZRE::Audio::GetSoloud()->getErrorString(screams.load("assets/happycrowdnoises.ogg")));
-		BZZRE::Audio::GetSoloud()->setLooping(screamHandle = BZZRE::Audio::GetSoloud()->play(screams), true);
-	}
 	BZZRE::Audio::GetSoloud()->setVolume(fireNoiseHandle, sfireSystem->GetParticleCount() / 800. );
 	BZZRE::Audio::GetSoloud()->setVolume(screamHandle, sfireSystem->GetParticleCount() / 800. );
 	auto colors = sfireSystem->GetColorBuffer();
@@ -540,6 +530,12 @@ struct SceneLevel
 			deerDeaths[2].load("assets/happydeernoise3.ogg");
 			deerDeaths[3].load("assets/happydeernoise4.ogg");
 			
+			fireNoise.load("assets/party.ogg");
+			BZZRE::Audio::GetSoloud()->setLooping(fireNoiseHandle = BZZRE::Audio::GetSoloud()->play(fireNoise), true);
+
+			screams.load("assets/happycrowdnoises.ogg");
+			BZZRE::Audio::GetSoloud()->setLooping(screamHandle = BZZRE::Audio::GetSoloud()->play(screams), true);
+
 			InitStream = true;
 			music_rampage.load("assets/deercost.ogg");
 			auto a =BZZRE::Audio::GetSoloud()->play(music_rampage, 0.75f);
@@ -666,10 +662,10 @@ static inline char LEVELDATA[1<<16];
 		auto list = ImGui::GetForegroundDrawList();
 		
 		ImGui::PushFont(a);
-		int num = sprintf_s(tmpstr, sizeof(tmpstr), buildingsLeftFmt, GameVar.BuildingsLeft);
+		int num = sprintf(tmpstr, buildingsLeftFmt, GameVar.BuildingsLeft);
 		list->AddText({0,0}, 0xFF00FF00, tmpstr, tmpstr+num);
 
-		num = sprintf_s(tmpstr, sizeof(tmpstr), animalsSaved, GameVar.AnimalsDied, GameVar.Animals, GameVar.AnimalsSaved);
+		num = sprintf(tmpstr, animalsSaved, GameVar.AnimalsDied, GameVar.Animals, GameVar.AnimalsSaved);
 		list->AddText({0,14 * 1.5f}, 0xFF00FF00, tmpstr, tmpstr+num);
 		ImGui::PopFont();
 		a->Scale = 1;
